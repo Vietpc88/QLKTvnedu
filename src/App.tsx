@@ -83,6 +83,12 @@ const MainApp = () => {
       if (data.teacherList && data.teacherList.length > 0) setTeacherList(data.teacherList);
       if (data.roomData && data.roomData.length > 0) setRoomData(data.roomData);
       
+      // Sync subjectColumns with markingSubjects if empty
+      const finalSubjects = (data.subjectColumns && data.subjectColumns.length > 0) 
+        ? data.subjectColumns 
+        : (data.markingSubjects || []);
+      setSubjectColumns(finalSubjects);
+
       // Update teachers from teacherList
       if (data.teacherList && data.teacherList.length > 0) {
         setTeachers(data.teacherList.map((t: any) => String(t.name).trim()).sort());

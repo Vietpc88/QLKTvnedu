@@ -191,18 +191,20 @@ export const loadFromGas = async (gasUrl: string) => {
     };
 
     // Map original data keys to lowercase for consistent access while preserving original keys
-    const originalHeaders = rawOriginal.length > 0 ? Object.keys(rawOriginal[0]) : [];
+    const rawRoomData = Array.isArray(dataPart.roomData) ? dataPart.roomData : [];
+    const originalHeaders = rawOriginal.length > 0 
+      ? Object.keys(rawOriginal[0]) 
+      : (rawRoomData.length > 0 ? Object.keys(rawRoomData[0]) : []);
     
     const subjectColumns = originalHeaders.filter(k => {
       const lowerKey = k.trim().toLowerCase();
-      return !lowerKey.includes('số điện thoại') && 
-             !lowerKey.includes('sđt') && 
-             !lowerKey.includes('điện thoại') &&
-             !lowerKey.includes('giáo viên') &&
-             !lowerKey.includes('stt') &&
-             !lowerKey.includes('phòng - khối') &&
-             !lowerKey.includes('phòng thi') &&
-             !lowerKey.includes('phong thi');
+      const isSystemKey = [
+        'số điện thoại', 'sđt', 'điện thoại', 'giáo viên', 'stt', 
+        'phòng - khối', 'phòng thi', 'phong thi', 'phòng', 'room', 
+        'grade', 'khối', 'khoi', 'tên giáo viên', 'ten giao vien'
+      ].some(sysKey => lowerKey.includes(sysKey) || lowerKey === sysKey);
+      
+      return !isSystemKey;
     });
 
     const mappedOriginal = rawOriginal.map((row: any) => {

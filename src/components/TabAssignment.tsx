@@ -25,6 +25,7 @@ export const TabAssignment: React.FC = () => {
     roomData, setRoomData, 
     assignmentData, setAssignmentData,
     subjectColumns, setSubjectColumns,
+    markingSubjects, setMarkingSubjects,
     teachers, setTeachers,
     teacherList, setTeacherList,
     gasUrl, currentFile, setCurrentFile,
@@ -169,6 +170,7 @@ export const TabAssignment: React.FC = () => {
         return !['stt', 'phòng - khối'].includes(l) && !l.startsWith('__empty');
       });
       setSubjectColumns(subjects);
+      setMarkingSubjects(subjects); // Lưu danh sách môn học vào cấu hình hệ thống
       
       alert(`Đã tải ${newRoomData.length} phòng.`);
     } catch (error: any) {
