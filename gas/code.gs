@@ -132,30 +132,34 @@ function handleResponse(e) {
         saveToSheet(sheetSchoolInfo, schoolArray);
       }
       
-      // Xử lý lưu trữ JSON tập trung (Sửa lỗi ghi đè - Thực hiện Hợp nhất dữ liệu)
+      // Xử lý lưu trữ theo hàng (Key-Value) để tránh hoàn toàn việc ghi đè chéo
       if (data.invigilationStore) {
         var newStore = JSON.parse(data.invigilationStore);
-        var existingStore = {};
+        var configRange = sheetConfig.getDataRange();
+        var configData = configRange.getValues();
         
-        // Đọc dữ liệu cũ đang có tại ô [2, 2]
-        if (sheetConfig.getLastRow() >= 2) {
-          var currentVal = sheetConfig.getRange(2, 2).getValue();
-          if (currentVal) {
-            try { existingStore = JSON.parse(currentVal); } catch(e) {}
+        // Tạo map để tra cứu dòng cho nhanh
+        var keyToRowMap = {};
+        for (var i = 1; i < configData.length; i++) {
+          keyToRowMap[configData[i][0]] = i + 1;
+        }
+        
+        // Đảm bảo có Tiêu đề nếu sheet trống
+        if (sheetConfig.getLastRow() === 0) {
+          sheetConfig.appendRow(["Key", "Value"]);
+        }
+
+        // Lặp qua từng khóa dữ liệu mới và cập nhật vào hàng riêng biệt
+        for (var key in newStore) {
+          var valString = typeof newStore[key] === 'object' ? JSON.stringify(newStore[key]) : newStore[key];
+          if (keyToRowMap[key]) {
+            // Đã có hàng -> Cập nhật dứt khoát hàng đó
+            sheetConfig.getRange(keyToRowMap[key], 2).setValue(valString);
+          } else {
+            // Chưa có -> Thêm hàng mới
+            sheetConfig.appendRow([key, valString]);
           }
         }
-        
-        // Hợp nhất: Ưu tiên dữ liệu mới gửi lên, giữ lại dữ liệu cũ không có trong gói gửi
-        for (var key in newStore) {
-          existingStore[key] = newStore[key];
-        }
-        
-        var finalJson = JSON.stringify(existingStore);
-        sheetConfig.clear();
-        sheetConfig.getRange(1, 1).setValue("Key");
-        sheetConfig.getRange(1, 2).setValue("Value");
-        sheetConfig.getRange(2, 1).setValue("invigilationStore");
-        sheetConfig.getRange(2, 2).setValue(finalJson);
         
         // Xuất kết quả ma trận ra sheet để xem (Nếu có cập nhật invigilationAssignments)
         if (newStore.invigilationAssignments) {
@@ -194,14 +198,22 @@ function handleResponse(e) {
     adminAccounts: getSheetData(sheetAdmin)
   };
   
-  // Tải dữ liệu JSON
+  // Tải dữ liệu từ hệ thống lưu trữ hàng (Hợp nhất tất cả các phím thành một JSON Store)
   if (sheetConfig && sheetConfig.getLastRow() > 1) {
-    var rows = sheetConfig.getDataRange().getValues();
-    for (var i = 1; i < rows.length; i++) {
-      if (rows[i][0] === "invigilationStore") {
-        result.invigilationStore = rows[i][1];
+    var configRows = sheetConfig.getDataRange().getValues();
+    var consolidatedStore = {};
+    for (var i = 1; i < configRows.length; i++) {
+      var key = configRows[i][0];
+      var rawVal = configRows[i][1];
+      if (!key) continue;
+      
+      try {
+        consolidatedStore[key] = JSON.parse(rawVal);
+      } catch(e) {
+        consolidatedStore[key] = rawVal;
       }
     }
+    result.invigilationStore = JSON.stringify(consolidatedStore);
   }
   
   var allSheets = ss.getSheets();
