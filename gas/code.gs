@@ -132,21 +132,35 @@ function handleResponse(e) {
         saveToSheet(sheetSchoolInfo, schoolArray);
       }
       
-      // Xử lý lưu trữ JSON tập trung
+      // Xử lý lưu trữ JSON tập trung (Sửa lỗi ghi đè - Thực hiện Hợp nhất dữ liệu)
       if (data.invigilationStore) {
+        var newStore = JSON.parse(data.invigilationStore);
+        var existingStore = {};
+        
+        // Đọc dữ liệu cũ đang có tại ô [2, 2]
+        if (sheetConfig.getLastRow() >= 2) {
+          var currentVal = sheetConfig.getRange(2, 2).getValue();
+          if (currentVal) {
+            try { existingStore = JSON.parse(currentVal); } catch(e) {}
+          }
+        }
+        
+        // Hợp nhất: Ưu tiên dữ liệu mới gửi lên, giữ lại dữ liệu cũ không có trong gói gửi
+        for (var key in newStore) {
+          existingStore[key] = newStore[key];
+        }
+        
+        var finalJson = JSON.stringify(existingStore);
         sheetConfig.clear();
         sheetConfig.getRange(1, 1).setValue("Key");
         sheetConfig.getRange(1, 2).setValue("Value");
         sheetConfig.getRange(2, 1).setValue("invigilationStore");
-        sheetConfig.getRange(2, 2).setValue(data.invigilationStore);
+        sheetConfig.getRange(2, 2).setValue(finalJson);
         
-        // Xuất kết quả ma trận ra sheet để xem
-        try {
-          var parsed = JSON.parse(data.invigilationStore);
-          if (parsed.invigilationAssignments) {
-            saveMatrixToSheet(sheetResult, parsed.invigilationAssignments);
-          }
-        } catch(e) {}
+        // Xuất kết quả ma trận ra sheet để xem (Nếu có cập nhật invigilationAssignments)
+        if (newStore.invigilationAssignments) {
+          saveMatrixToSheet(sheetResult, newStore.invigilationAssignments);
+        }
       }
 
       // Logic đồng bộ các sheet Phach_
