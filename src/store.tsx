@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { AppState, OriginalDataRow, AssignmentRow, MergedDataRow, AdminAccountRow, ExamScheduleRow, MatrixAssignment, TeacherConfig, InvigilationConfig, SchoolInfo } from './types';
+import { AppState, OriginalDataRow, AssignmentRow, MergedDataRow, AdminAccountRow, ExamScheduleRow, MatrixAssignment, TeacherConfig, InvigilationConfig, SchoolInfo, TeacherListRow, RoomDataRow } from './types';
 
 const AppContext = createContext<AppState | undefined>(undefined);
 

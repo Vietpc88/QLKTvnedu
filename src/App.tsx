@@ -426,12 +426,12 @@ const MainApp = () => {
   return (
     <div className="h-screen bg-slate-50 flex flex-col font-sans overflow-hidden">
       {/* Premium Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm px-6 py-3 flex items-center justify-between shrink-0 z-50">
-        <div className="flex items-center gap-4">
+      <header className="bg-white border-b border-gray-200 shadow-sm px-3 md:px-6 py-2 md:py-3 flex items-center justify-between shrink-0 z-50">
+        <div className="flex items-center gap-2 md:gap-4">
           <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-600/20">
-            <GraduationCap size={24} />
+            <GraduationCap size={20} className="md:w-6 md:h-6" />
           </div>
-          <div>
+          <div className="hidden md:block">
             <h1 className="text-xl font-black text-gray-900 leading-tight uppercase tracking-tight">
               Tiện ích quản lý kỳ thi
             </h1>
@@ -469,10 +469,11 @@ const MainApp = () => {
 
           <button 
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-100 transition-all font-black text-xs uppercase border border-rose-100 group"
+            className="flex items-center gap-2 px-3 md:px-4 py-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-100 transition-all font-black text-[10px] md:text-xs uppercase border border-rose-100 group"
           >
-            <LogOut size={16} className="transition-transform group-hover:-translate-x-1" />
-            Đăng xuất
+            <LogOut size={14} className="md:w-4 md:h-4 transition-transform group-hover:-translate-x-1" />
+            <span className="hidden sm:inline">Đăng xuất</span>
+            <span className="sm:hidden text-[9px]">Thoát</span>
           </button>
         </div>
       </header>
@@ -487,35 +488,41 @@ const MainApp = () => {
                   <button 
                     onClick={() => setActiveTab('assignment')}
                     className={cn(
-                      "flex items-center gap-2 px-6 py-3 rounded-t-xl font-black text-[13px] uppercase transition-all tracking-wide border-x border-t",
+                      "flex items-center gap-1.5 md:gap-2 px-3 md:px-6 py-3 rounded-t-xl font-black text-[11px] md:text-[13px] uppercase transition-all tracking-wide border-x border-t",
                       activeTab === 'assignment' 
                         ? "bg-slate-50 text-blue-600 border-gray-200 shadow-inner" 
                         : "text-gray-400 hover:text-gray-600 border-transparent"
                     )}
                   >
-                    <Wrench size={16} /> Phân công túi bài
+                    <Wrench size={14} className="md:w-4 md:h-4" /> 
+                    <span className="hidden md:inline">Phân công túi bài</span>
+                    <span className="md:hidden">PC Chấm</span>
                   </button>
                   <button 
                     onClick={() => setActiveTab('merger')}
                     className={cn(
-                      "flex items-center gap-2 px-6 py-3 rounded-t-xl font-black text-[13px] uppercase transition-all tracking-wide border-x border-t",
+                      "flex items-center gap-1.5 md:gap-2 px-3 md:px-6 py-3 rounded-t-xl font-black text-[11px] md:text-[13px] uppercase transition-all tracking-wide border-x border-t",
                       activeTab === 'merger' 
                         ? "bg-slate-50 text-blue-600 border-gray-200 shadow-inner" 
                         : "text-gray-400 hover:text-gray-600 border-transparent"
                     )}
                   >
-                    <LayoutDashboard size={16} /> Kết quả ghép phách
+                    <LayoutDashboard size={14} className="md:w-4 md:h-4" /> 
+                    <span className="hidden md:inline">Kết quả ghép phách</span>
+                    <span className="md:hidden">Tra Phách</span>
                   </button>
                   <button 
                     onClick={() => setActiveTab('invigilation')}
                     className={cn(
-                      "flex items-center gap-2 px-6 py-3 rounded-t-xl font-black text-[13px] uppercase transition-all tracking-wide border-x border-t",
+                      "flex items-center gap-1.5 md:gap-2 px-3 md:px-6 py-3 rounded-t-xl font-black text-[11px] md:text-[13px] uppercase transition-all tracking-wide border-x border-t",
                       activeTab === 'invigilation' 
                         ? "bg-slate-50 text-blue-600 border-gray-200 shadow-inner" 
                         : "text-gray-400 hover:text-gray-600 border-transparent"
                     )}
                   >
-                    <Calendar size={16} /> Coi thi & Chấm thi
+                    <Calendar size={14} className="md:w-4 md:h-4" /> 
+                    <span className="hidden md:inline">Coi thi & Chấm thi</span>
+                    <span className="md:hidden">Coi & Chấm</span>
                   </button>
                 </>
               ) : (
@@ -563,8 +570,8 @@ const MainApp = () => {
         </div>
 
         {/* Dynamic Viewport */}
-        <div className="flex-1 overflow-hidden p-6 relative">
-          <div className="h-full bg-white rounded-[2rem] border border-gray-200 shadow-xl shadow-slate-200/50 flex flex-col overflow-hidden relative z-10">
+        <div className="flex-1 overflow-hidden p-2 md:p-6 relative">
+          <div className="h-full bg-white rounded-2xl md:rounded-[2rem] border border-gray-200 shadow-xl shadow-slate-200/50 flex flex-col overflow-hidden relative z-10">
             {isLoadingInitial ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-6 text-gray-400 bg-slate-50/50">
                 <div className="relative">
