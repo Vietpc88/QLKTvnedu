@@ -45,7 +45,8 @@ export const TabAssignment: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [isSyncing, setIsSyncing] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-  const [sidePanelType, setSidePanelType] = useState<'room' | 'teacher' | 'missing' | null>(null);
+  const [sidePanelType, setSidePanelType] = useState<'room' | 'teacher' | null>(null);
+  const [showMissingModal, setShowMissingModal] = useState(false);
   const [missingTasks, setMissingTasks] = useState<any[]>([]);
   const [dialog, setDialog] = useState<{ title: string; message: string; type: 'success' | 'error' | 'warning' } | null>(null);
   
@@ -499,7 +500,7 @@ export const TabAssignment: React.FC = () => {
     });
 
     setMissingTasks(missing);
-    setSidePanelType('missing');
+    setShowMissingModal(true);
     
     if (missing.length === 0) {
       setDialog({ 
@@ -820,111 +821,72 @@ export const TabAssignment: React.FC = () => {
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-full lg:min-h-0 overflow-y-auto lg:overflow-hidden">
-      {/* Left Panel: Original Data / Teacher List / Missing Tasks */}
+      {/* Left Panel: Original Data / Teacher List */}
       {sidePanelType !== null && (
         <div className="w-full lg:w-1/3 flex flex-col border border-gray-200 rounded-lg bg-white lg:overflow-hidden min-h-[400px] lg:min-h-0 shrink-0 lg:shrink shadow-sm">
-          <div className={cn(
-            "p-3 border-b border-gray-200 font-semibold text-gray-700 shrink-0 flex justify-between items-center",
-            sidePanelType === 'missing' ? "bg-amber-50" : "bg-gray-50"
-          )}>
-            <div className="flex flex-col">
-              <span className="flex items-center gap-2">
-                {sidePanelType === 'room' && '📂 DỮ LIỆU GỐC (DS PHÒNG THI)'}
-                {sidePanelType === 'teacher' && '👥 DANH SÁCH GIÁO VIÊN'}
-                {sidePanelType === 'missing' && (
-                  <span className="flex items-center gap-2 text-amber-700">
-                    <AlertTriangle size={18} /> TÚI BÀI CHƯA PHÂN CÔNG
-                  </span>
-                )}
-              </span>
-              {sidePanelType === 'missing' && (
-                <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest mt-0.5">
-                  {filterGrade || filterSubject 
-                    ? `Lọc: ${filterGrade ? `Khối ${filterGrade}` : ''} ${filterSubject ? `- ${filterSubject}` : ''}`
-                    : 'Phạm vi: Toàn bộ kỳ thi'}
-                </span>
-              )}
-            </div>
+          <div className="p-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 shrink-0 flex justify-between items-center">
+            <span className="flex items-center gap-2">
+              {sidePanelType === 'room' && '📂 DỮ LIỆU GỐC (DS PHÒNG THI)'}
+              {sidePanelType === 'teacher' && '👥 DANH SÁCH GIÁO VIÊN'}
+            </span>
             <button 
               onClick={() => setSidePanelType(null)}
-              className="p-1.5 hover:bg-gray-200 rounded-full text-gray-400 transition-colors"
-              title="Đóng bảng"
+              className="p-1 hover:bg-gray-200 rounded-full text-gray-400 transition-colors"
             >
               <Trash2 size={16} />
             </button>
           </div>
           <div className="flex-1 overflow-auto min-h-0">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0 z-20">
-                <tr>
+            <div className="min-w-full inline-block align-middle overflow-x-auto">
+              <table className="w-full text-sm text-left border-collapse">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0 z-20">
+                  <tr>
+                    {sidePanelType === 'room' && (
+                      roomData.length > 0 ? (
+                        Object.keys(roomData[0]).map((key, i) => (
+                          <th key={i} className="px-4 py-2 border-b whitespace-nowrap">{key}</th>
+                        ))
+                      ) : (
+                        <th className="px-4 py-2 border-b">Chưa có dữ liệu</th>
+                      )
+                    )}
+                    {sidePanelType === 'teacher' && (
+                      <>
+                        <th className="px-4 py-2 border-b whitespace-nowrap">Họ và tên</th>
+                        <th className="px-4 py-2 border-b whitespace-nowrap">Số điện thoại</th>
+                      </>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
                   {sidePanelType === 'room' && (
-                    roomData.length > 0 ? (
-                      Object.keys(roomData[0]).map((key, i) => (
-                        <th key={i} className="px-4 py-2 border-b">{key}</th>
-                      ))
-                    ) : (
-                      <th className="px-4 py-2 border-b">Chưa có dữ liệu</th>
-                    )
+                    roomData.map((row, i) => (
+                      <tr key={i} className="bg-white border-b hover:bg-gray-50">
+                        {Object.values(row).map((val: any, j) => (
+                          <td key={j} className="px-4 py-2 whitespace-nowrap border-r last:border-r-0">{val}</td>
+                        ))}
+                      </tr>
+                    ))
                   )}
                   {sidePanelType === 'teacher' && (
-                    <>
-                      <th className="px-4 py-2 border-b">Họ và tên</th>
-                      <th className="px-4 py-2 border-b">Số điện thoại</th>
-                    </>
+                    teacherList.map((t, i) => (
+                      <tr key={i} className="bg-white border-b hover:bg-gray-50">
+                        <td className="px-4 py-2 font-medium whitespace-nowrap">{t.name}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{String(t.phone || '').replace(/^'/, '')}</td>
+                      </tr>
+                    ))
                   )}
-                  {sidePanelType === 'missing' && (
-                    <>
-                      <th className="px-4 py-2 border-b w-12 text-center">STT</th>
-                      <th className="px-4 py-2 border-b">Khối</th>
-                      <th className="px-4 py-2 border-b">Môn</th>
-                      <th className="px-4 py-2 border-b">Phòng</th>
-                      <th className="px-4 py-2 border-b font-bold">Mã túi</th>
-                    </>
+                  {((sidePanelType === 'room' && roomData.length === 0) || 
+                    (sidePanelType === 'teacher' && teacherList.length === 0)) && (
+                    <tr>
+                      <td colSpan={10} className="px-4 py-12 text-center text-gray-400 italic">
+                        Không có dữ liệu hiển thị.
+                      </td>
+                    </tr>
                   )}
-                </tr>
-              </thead>
-              <tbody>
-                {sidePanelType === 'room' && (
-                  roomData.map((row, i) => (
-                    <tr key={i} className="bg-white border-b hover:bg-gray-50">
-                      {Object.values(row).map((val: any, j) => (
-                        <td key={j} className="px-4 py-2 whitespace-nowrap">{val}</td>
-                      ))}
-                    </tr>
-                  ))
-                )}
-                {sidePanelType === 'teacher' && (
-                  teacherList.map((t, i) => (
-                    <tr key={i} className="bg-white border-b hover:bg-gray-50">
-                      <td className="px-4 py-2 font-medium">{t.name}</td>
-                      <td className="px-4 py-2">{String(t.phone || '').replace(/^'/, '')}</td>
-                    </tr>
-                  ))
-                )}
-                {sidePanelType === 'missing' && (
-                  missingTasks.map((t, i) => (
-                    <tr key={i} className="bg-white border-b hover:bg-amber-50/50">
-                      <td className="px-4 py-2 text-center text-gray-400 font-medium">{i + 1}</td>
-                      <td className="px-4 py-2">{t.grade}</td>
-                      <td className="px-4 py-2">{t.subject}</td>
-                      <td className="px-4 py-2">{t.room}</td>
-                      <td className="px-4 py-2 font-black text-amber-700">{t.pkg}</td>
-                    </tr>
-                  ))
-                )}
-                {((sidePanelType === 'room' && roomData.length === 0) || 
-                  (sidePanelType === 'teacher' && teacherList.length === 0) ||
-                  (sidePanelType === 'missing' && missingTasks.length === 0)) && (
-                  <tr>
-                    <td colSpan={10} className="px-4 py-12 text-center text-gray-400 italic">
-                      {sidePanelType === 'missing' 
-                        ? 'Chúc mừng! Không còn túi thi nào bị sót.' 
-                        : 'Không có dữ liệu hiển thị.'}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -1299,7 +1261,7 @@ export const TabAssignment: React.FC = () => {
               </div>
               <div className="flex justify-end">
                 <button 
-                  onClick={() => setDialog(null)}
+                   onClick={() => setDialog(null)}
                   className={cn(
                     "px-6 py-2 text-white rounded-lg font-medium transition-colors shadow-sm",
                     dialog.type === 'error' ? "bg-red-600 hover:bg-red-700" : 
@@ -1308,6 +1270,89 @@ export const TabAssignment: React.FC = () => {
                 >
                   Đã hiểu
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: TÚI BÀI CHƯA PHÂN CÔNG */}
+        {showMissingModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[101] p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl border border-amber-100 animate-in zoom-in duration-300 overflow-hidden">
+              <div className="p-6 bg-amber-50 border-b border-amber-100 flex justify-between items-center shrink-0">
+                <div className="flex items-center gap-4">
+                  <div className="bg-amber-100 p-3 rounded-2xl text-amber-700 shadow-inner">
+                    <AlertTriangle size={24} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black text-amber-900 uppercase tracking-tight">TÚI BÀI CHƯA PHÂN CÔNG</h2>
+                    <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest mt-0.5">
+                      {filterGrade || filterSubject 
+                        ? `Đang lọc: ${filterGrade ? `Khối ${filterGrade}` : ''} ${filterSubject ? `- ${filterSubject}` : ''}`
+                        : 'Phạm vi: Toàn bộ kỳ thi'}
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowMissingModal(false)}
+                  className="p-2 hover:bg-amber-100 rounded-full text-amber-400 transition-colors"
+                >
+                  <XCircle size={28} />
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-auto p-6 bg-white min-h-0">
+                {missingTasks.length > 0 ? (
+                  <div className="inline-block min-w-full align-middle overflow-x-auto border border-gray-100 rounded-2xl shadow-sm">
+                    <table className="min-w-full divide-y divide-gray-100">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th className="px-6 py-4 text-center text-xs font-black text-gray-500 uppercase tracking-widest">STT</th>
+                          <th className="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Khối</th>
+                          <th className="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Môn</th>
+                          <th className="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Phòng</th>
+                          <th className="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Mã túi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-50">
+                        {missingTasks.map((t, i) => (
+                          <tr key={i} className="hover:bg-amber-50/30 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-400">{i + 1}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{t.grade}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{t.subject}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{t.room}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-black text-amber-700">{t.pkg}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-12 bg-slate-50 border-2 border-dashed border-gray-200 rounded-[2rem]">
+                    <div className="bg-white p-4 rounded-3xl shadow-lg shadow-emerald-600/10 mb-6">
+                      <CheckCircle2 size={48} className="text-emerald-500" />
+                    </div>
+                    <h3 className="text-xl font-black text-gray-800 uppercase tracking-tight">HOÀN TẤT PHÂN CÔNG</h3>
+                    <p className="text-sm text-gray-500 mt-2">Tuyệt vời! Tất cả túi thi đều đã có người phụ trách.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 bg-slate-50 border-t border-gray-100 flex justify-end gap-3 shrink-0">
+                <button 
+                  onClick={() => setShowMissingModal(false)}
+                   className="px-8 py-3 bg-white border border-gray-200 text-gray-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-100 transition-all font-sans"
+                >
+                  Đóng cửa sổ
+                </button>
+                {missingTasks.length > 0 && (
+                  <button 
+                    onClick={() => { handleExportMissingPDF(); setShowMissingModal(false); }}
+                    className="px-8 py-3 bg-amber-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-600/20 active:scale-95"
+                  >
+                    Xuất Phiếu PDF
+                  </button>
+                )}
               </div>
             </div>
           </div>
