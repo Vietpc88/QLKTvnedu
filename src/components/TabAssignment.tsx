@@ -45,7 +45,7 @@ export const TabAssignment: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [isSyncing, setIsSyncing] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-  const [showOriginalData, setShowOriginalData] = useState(false);
+  const [sidePanelType, setSidePanelType] = useState<'room' | 'teacher' | null>(null);
   const [dialog, setDialog] = useState<{ title: string; message: string; type: 'success' | 'error' | 'warning' } | null>(null);
   
   const teacherInputRef = useRef<HTMLInputElement>(null);
@@ -812,32 +812,61 @@ export const TabAssignment: React.FC = () => {
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-full lg:min-h-0 overflow-y-auto lg:overflow-hidden">
       {/* Left Panel: Original Data */}
-      {showOriginalData && (
+      {sidePanelType !== null && (
         <div className="w-full lg:w-1/3 flex flex-col border border-gray-200 rounded-lg bg-white lg:overflow-hidden min-h-[400px] lg:min-h-0 shrink-0 lg:shrink">
-          <div className="p-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 shrink-0">
-            📂 DỮ LIỆU GỐC (DS PHÒNG THI)
+          <div className="p-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 shrink-0 flex justify-between items-center">
+            <span>
+              {sidePanelType === 'room' ? '📂 DỮ LIỆU GỐC (DS PHÒNG THI)' : '👥 DANH SÁCH GIÁO VIÊN'}
+            </span>
+            <button 
+              onClick={() => setSidePanelType(null)}
+              className="p-1 hover:bg-gray-200 rounded-full text-gray-400"
+            >
+              <Trash2 size={14} />
+            </button>
           </div>
           <div className="flex-1 overflow-auto min-h-0">
             <table className="w-full text-sm text-left">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0 z-20">
                 <tr>
-                  {roomData.length > 0 ? (
-                    Object.keys(roomData[0]).map((key, i) => (
-                      <th key={i} className="px-4 py-2 border-b">{key}</th>
-                    ))
+                  {sidePanelType === 'room' ? (
+                    roomData.length > 0 ? (
+                      Object.keys(roomData[0]).map((key, i) => (
+                        <th key={i} className="px-4 py-2 border-b">{key}</th>
+                      ))
+                    ) : (
+                      <th className="px-4 py-2 border-b">Chưa có dữ liệu</th>
+                    )
                   ) : (
-                    <th className="px-4 py-2 border-b">Chưa có dữ liệu</th>
+                    <>
+                      <th className="px-4 py-2 border-b">Họ và tên</th>
+                      <th className="px-4 py-2 border-b">Số điện thoại</th>
+                    </>
                   )}
                 </tr>
               </thead>
               <tbody>
-                {roomData.map((row, i) => (
-                  <tr key={i} className="bg-white border-b hover:bg-gray-50">
-                    {Object.values(row).map((val: any, j) => (
-                      <td key={j} className="px-4 py-2 whitespace-nowrap">{val}</td>
-                    ))}
+                {sidePanelType === 'room' ? (
+                  roomData.map((row, i) => (
+                    <tr key={i} className="bg-white border-b hover:bg-gray-50">
+                      {Object.values(row).map((val: any, j) => (
+                        <td key={j} className="px-4 py-2 whitespace-nowrap">{val}</td>
+                      ))}
+                    </tr>
+                  ))
+                ) : (
+                  teacherList.map((t, i) => (
+                    <tr key={i} className="bg-white border-b hover:bg-gray-50">
+                      <td className="px-4 py-2 font-medium">{t.name}</td>
+                      <td className="px-4 py-2">{t.phone}</td>
+                    </tr>
+                  ))
+                )}
+                {((sidePanelType === 'room' && roomData.length === 0) || (sidePanelType === 'teacher' && teacherList.length === 0)) && (
+                  <tr>
+                    <td colSpan={10} className="px-4 py-8 text-center text-gray-400">Không có dữ liệu hiển thị</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -847,7 +876,7 @@ export const TabAssignment: React.FC = () => {
       {/* Right Panel: Controls & Results */}
       <div className={cn(
         "flex flex-col gap-4 shrink-0 lg:shrink lg:min-h-0",
-        showOriginalData ? "w-full lg:w-2/3" : "w-full"
+        sidePanelType !== null ? "w-full lg:w-2/3" : "w-full"
       )}>
         
         {/* Configuration Header - 2 Balanced Horizontal Cards */}
@@ -867,6 +896,15 @@ export const TabAssignment: React.FC = () => {
               </div>
               
               <div className="flex items-center gap-2 shrink-0">
+                <button 
+                  onClick={() => setSidePanelType(sidePanelType === 'teacher' ? null : 'teacher')}
+                  className={cn(
+                    "text-[9px] font-black px-2 py-1.5 rounded-lg border uppercase transition-all whitespace-nowrap",
+                    sidePanelType === 'teacher' ? "bg-blue-600 text-white border-blue-600" : "text-blue-600 bg-blue-50 border-blue-100"
+                  )}
+                >
+                  {sidePanelType === 'teacher' ? 'Ẩn' : 'Hiện'}
+                </button>
                 <button 
                   onClick={() => teacherInputRef.current?.click()}
                   disabled={loading}
@@ -900,6 +938,15 @@ export const TabAssignment: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
+                <button 
+                  onClick={() => setSidePanelType(sidePanelType === 'room' ? null : 'room')}
+                  className={cn(
+                    "text-[9px] font-black px-2 py-1.5 rounded-lg border uppercase transition-all whitespace-nowrap",
+                    sidePanelType === 'room' ? "bg-indigo-600 text-white border-indigo-600" : "text-indigo-600 bg-indigo-50 border-indigo-100"
+                  )}
+                >
+                  {sidePanelType === 'room' ? 'Ẩn' : 'Hiện'}
+                </button>
                 <button 
                   onClick={() => roomInputRef.current?.click()}
                   disabled={loading}
@@ -942,12 +989,6 @@ export const TabAssignment: React.FC = () => {
                 className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-all border border-slate-200"
               >
                 <FileDown size={14} /> Mẫu Toàn bộ
-              </button>
-              <button 
-                onClick={() => setShowOriginalData(!showOriginalData)}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-indigo-100 transition-all border border-indigo-100"
-              >
-                {showOriginalData ? 'Ẩn DS Gốc' : 'Hiện DS Gốc'}
               </button>
             </div>
           </div>
