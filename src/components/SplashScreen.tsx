@@ -31,10 +31,10 @@ export const SplashScreen: React.FC<Props> = ({ onLogin, loginError, isLoading, 
           <div className="inline-flex items-center justify-center p-4 bg-blue-600 rounded-3xl shadow-xl shadow-blue-600/30 mb-6">
             <GraduationCap size={48} className="text-white" />
           </div>
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400 uppercase whitespace-nowrap">
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400 uppercase whitespace-nowrap hidden md:block">
             TIỆN ÍCH QUẢN LÝ KỲ THI
           </h1>
-          <p className="text-slate-400 font-medium text-xs md:text-sm uppercase tracking-widest">
+          <p className="text-slate-400 font-medium text-xs md:text-sm uppercase tracking-widest hidden md:block">
             {schoolName}
           </p>
         </div>

@@ -109,8 +109,7 @@ export const TabAssignment: React.FC = () => {
         const nameKey = Object.keys(row).find(k => ['họ và tên', 'giáo viên', 'tên', 'name'].includes(k.toLowerCase().trim()));
         const phoneKey = Object.keys(row).find(k => ['số điện thoại', 'sđt', 'điện thoại', 'phone'].includes(k.toLowerCase().trim()));
         
-        let phone = String(row[phoneKey || ''] || '').trim();
-        if (phone && !phone.startsWith("'")) phone = `'${phone}`;
+        let phone = String(row[phoneKey || ''] || '').trim().replace(/^'/, '');
         
         return {
           name: String(row[nameKey || ''] || '').trim(),
@@ -757,10 +756,7 @@ export const TabAssignment: React.FC = () => {
         phone = tInfo?.phone || '';
       }
       
-      let phoneStr = phone ? formatPhoneNumber(phone) : "";
-      if (phoneStr && !phoneStr.startsWith("'")) {
-        phoneStr = "'" + phoneStr;
-      }
+      let phoneStr = phone ? formatPhoneNumber(phone).replace(/^'/, '') : "";
       
       return {
         "Môn": row.subject,
@@ -858,7 +854,7 @@ export const TabAssignment: React.FC = () => {
                   teacherList.map((t, i) => (
                     <tr key={i} className="bg-white border-b hover:bg-gray-50">
                       <td className="px-4 py-2 font-medium">{t.name}</td>
-                      <td className="px-4 py-2">{t.phone}</td>
+                      <td className="px-4 py-2">{String(t.phone || '').replace(/^'/, '')}</td>
                     </tr>
                   ))
                 )}

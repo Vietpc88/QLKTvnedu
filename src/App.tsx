@@ -302,13 +302,19 @@ const MainApp = () => {
 
       // Find teacher by phone in assignmentData or teacherList
       let foundTeacher = '';
-      const assignment = assignmentData.find(a => a.phone === inputPhone || a.phone?.replace(/[\s.-]/g, '') === inputPhone.replace(/[\s.-]/g, ''));
+      const cleanInput = inputPhone.replace(/\D/g, '');
+      
+      const assignment = assignmentData.find(a => {
+        const cleanPhone = (a.phone || '').replace(/\D/g, '');
+        return cleanPhone === cleanInput && cleanInput !== '';
+      });
+
       if (assignment) {
         foundTeacher = assignment.teacher;
       } else {
         const t = teacherList.find(r => {
-          const val = String(r.phone || '').trim();
-          return val === inputPhone || val.replace(/[\s.-]/g, '') === inputPhone.replace(/[\s.-]/g, '');
+          const val = String(r.phone || '').replace(/\D/g, '');
+          return val === cleanInput && cleanInput !== '';
         });
         if (t) foundTeacher = t.name;
       }
