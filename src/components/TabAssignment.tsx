@@ -45,7 +45,8 @@ export const TabAssignment: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [isSyncing, setIsSyncing] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-  const [sidePanelType, setSidePanelType] = useState<'room' | 'teacher' | null>(null);
+  const [sidePanelType, setSidePanelType] = useState<'room' | 'teacher' | 'missing' | null>(null);
+  const [missingTasks, setMissingTasks] = useState<any[]>([]);
   const [dialog, setDialog] = useState<{ title: string; message: string; type: 'success' | 'error' | 'warning' } | null>(null);
   
   const teacherInputRef = useRef<HTMLInputElement>(null);
@@ -445,7 +446,7 @@ export const TabAssignment: React.FC = () => {
 
   const handleCheckMissing = () => {
     if (roomData.length === 0) {
-      alert("Chưa có dữ liệu gốc (DS Phòng). Vui lòng tải file trước!");
+      setDialog({ title: "Thông báo", message: "Chưa có dữ liệu gốc (DS Phòng). Vui lòng tải file trước!", type: "warning" });
       return;
     }
 
@@ -477,23 +478,35 @@ export const TabAssignment: React.FC = () => {
       completedTasksSet.add(key);
     });
 
-    let missingTasks = Array.from(requiredTasksMap.entries())
+    let missing = Array.from(requiredTasksMap.entries())
       .filter(([key]) => !completedTasksSet.has(key))
       .map(([_, val]) => val);
 
     // Filter by selected grade and subject if they are selected
     if (filterGrade) {
-      missingTasks = missingTasks.filter(t => normalizeStr(t.grade) === normalizeStr(filterGrade));
+      missing = missing.filter(t => normalizeStr(t.grade) === normalizeStr(filterGrade));
     }
     if (filterSubject) {
-      missingTasks = missingTasks.filter(t => normalizeStr(t.subject) === normalizeStr(filterSubject));
+      missing = missing.filter(t => normalizeStr(t.subject) === normalizeStr(filterSubject));
     }
 
-    if (missingTasks.length === 0) {
-      alert("Tuyệt vời! Tất cả các túi thi đã được phân công đầy đủ!");
-    } else {
-      console.log("Missing Tasks:", missingTasks);
-      alert(`Cảnh báo: Phát hiện ${missingTasks.length} túi chưa được phân công. (Xem chi tiết trong Console)`);
+    // Sort: Grade, Subject, Room, Package
+    missing.sort((a, b) => {
+      if (a.grade !== b.grade) return a.grade.localeCompare(b.grade);
+      if (a.subject !== b.subject) return a.subject.localeCompare(b.subject);
+      if (a.room !== b.room) return a.room.localeCompare(b.room);
+      return a.pkg.localeCompare(b.pkg);
+    });
+
+    setMissingTasks(missing);
+    setSidePanelType('missing');
+    
+    if (missing.length === 0) {
+      setDialog({ 
+        title: "Hoàn tất", 
+        message: "Tuyệt vời! Tất cả các túi thi đã được phân công đầy đủ dựa theo bộ lọc hiện tại.", 
+        type: "success" 
+      });
     }
   };
 
@@ -807,25 +820,44 @@ export const TabAssignment: React.FC = () => {
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-full lg:min-h-0 overflow-y-auto lg:overflow-hidden">
-      {/* Left Panel: Original Data */}
+      {/* Left Panel: Original Data / Teacher List / Missing Tasks */}
       {sidePanelType !== null && (
-        <div className="w-full lg:w-1/3 flex flex-col border border-gray-200 rounded-lg bg-white lg:overflow-hidden min-h-[400px] lg:min-h-0 shrink-0 lg:shrink">
-          <div className="p-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 shrink-0 flex justify-between items-center">
-            <span>
-              {sidePanelType === 'room' ? '📂 DỮ LIỆU GỐC (DS PHÒNG THI)' : '👥 DANH SÁCH GIÁO VIÊN'}
-            </span>
+        <div className="w-full lg:w-1/3 flex flex-col border border-gray-200 rounded-lg bg-white lg:overflow-hidden min-h-[400px] lg:min-h-0 shrink-0 lg:shrink shadow-sm">
+          <div className={cn(
+            "p-3 border-b border-gray-200 font-semibold text-gray-700 shrink-0 flex justify-between items-center",
+            sidePanelType === 'missing' ? "bg-amber-50" : "bg-gray-50"
+          )}>
+            <div className="flex flex-col">
+              <span className="flex items-center gap-2">
+                {sidePanelType === 'room' && '📂 DỮ LIỆU GỐC (DS PHÒNG THI)'}
+                {sidePanelType === 'teacher' && '👥 DANH SÁCH GIÁO VIÊN'}
+                {sidePanelType === 'missing' && (
+                  <span className="flex items-center gap-2 text-amber-700">
+                    <AlertTriangle size={18} /> TÚI BÀI CHƯA PHÂN CÔNG
+                  </span>
+                )}
+              </span>
+              {sidePanelType === 'missing' && (
+                <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest mt-0.5">
+                  {filterGrade || filterSubject 
+                    ? `Lọc: ${filterGrade ? `Khối ${filterGrade}` : ''} ${filterSubject ? `- ${filterSubject}` : ''}`
+                    : 'Phạm vi: Toàn bộ kỳ thi'}
+                </span>
+              )}
+            </div>
             <button 
               onClick={() => setSidePanelType(null)}
-              className="p-1 hover:bg-gray-200 rounded-full text-gray-400"
+              className="p-1.5 hover:bg-gray-200 rounded-full text-gray-400 transition-colors"
+              title="Đóng bảng"
             >
-              <Trash2 size={14} />
+              <Trash2 size={16} />
             </button>
           </div>
           <div className="flex-1 overflow-auto min-h-0">
             <table className="w-full text-sm text-left">
               <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0 z-20">
                 <tr>
-                  {sidePanelType === 'room' ? (
+                  {sidePanelType === 'room' && (
                     roomData.length > 0 ? (
                       Object.keys(roomData[0]).map((key, i) => (
                         <th key={i} className="px-4 py-2 border-b">{key}</th>
@@ -833,16 +865,26 @@ export const TabAssignment: React.FC = () => {
                     ) : (
                       <th className="px-4 py-2 border-b">Chưa có dữ liệu</th>
                     )
-                  ) : (
+                  )}
+                  {sidePanelType === 'teacher' && (
                     <>
                       <th className="px-4 py-2 border-b">Họ và tên</th>
                       <th className="px-4 py-2 border-b">Số điện thoại</th>
                     </>
                   )}
+                  {sidePanelType === 'missing' && (
+                    <>
+                      <th className="px-4 py-2 border-b w-12 text-center">STT</th>
+                      <th className="px-4 py-2 border-b">Khối</th>
+                      <th className="px-4 py-2 border-b">Môn</th>
+                      <th className="px-4 py-2 border-b">Phòng</th>
+                      <th className="px-4 py-2 border-b font-bold">Mã túi</th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody>
-                {sidePanelType === 'room' ? (
+                {sidePanelType === 'room' && (
                   roomData.map((row, i) => (
                     <tr key={i} className="bg-white border-b hover:bg-gray-50">
                       {Object.values(row).map((val: any, j) => (
@@ -850,7 +892,8 @@ export const TabAssignment: React.FC = () => {
                       ))}
                     </tr>
                   ))
-                ) : (
+                )}
+                {sidePanelType === 'teacher' && (
                   teacherList.map((t, i) => (
                     <tr key={i} className="bg-white border-b hover:bg-gray-50">
                       <td className="px-4 py-2 font-medium">{t.name}</td>
@@ -858,9 +901,26 @@ export const TabAssignment: React.FC = () => {
                     </tr>
                   ))
                 )}
-                {((sidePanelType === 'room' && roomData.length === 0) || (sidePanelType === 'teacher' && teacherList.length === 0)) && (
+                {sidePanelType === 'missing' && (
+                  missingTasks.map((t, i) => (
+                    <tr key={i} className="bg-white border-b hover:bg-amber-50/50">
+                      <td className="px-4 py-2 text-center text-gray-400 font-medium">{i + 1}</td>
+                      <td className="px-4 py-2">{t.grade}</td>
+                      <td className="px-4 py-2">{t.subject}</td>
+                      <td className="px-4 py-2">{t.room}</td>
+                      <td className="px-4 py-2 font-black text-amber-700">{t.pkg}</td>
+                    </tr>
+                  ))
+                )}
+                {((sidePanelType === 'room' && roomData.length === 0) || 
+                  (sidePanelType === 'teacher' && teacherList.length === 0) ||
+                  (sidePanelType === 'missing' && missingTasks.length === 0)) && (
                   <tr>
-                    <td colSpan={10} className="px-4 py-8 text-center text-gray-400">Không có dữ liệu hiển thị</td>
+                    <td colSpan={10} className="px-4 py-12 text-center text-gray-400 italic">
+                      {sidePanelType === 'missing' 
+                        ? 'Chúc mừng! Không còn túi thi nào bị sót.' 
+                        : 'Không có dữ liệu hiển thị.'}
+                    </td>
                   </tr>
                 )}
               </tbody>
