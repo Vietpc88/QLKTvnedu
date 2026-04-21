@@ -414,6 +414,16 @@ const MainApp = () => {
         </nav>
 
         <div className="p-4 border-t border-border-soft space-y-2">
+          {(role === 'admin' || role === 'speaking_teacher') && (
+            <div 
+              className={cn("flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer font-bold text-sm text-[var(--color-text-body)] hover:bg-slate-50 hover:text-[var(--color-text-heading)]", !isSidebarOpen && "justify-center px-0")}
+              onClick={() => setIsChangePasswordModalOpen(true)}
+              title="Đổi mật khẩu"
+            >
+              <KeyRound size={20} />
+              {isSidebarOpen && <span>Đổi mật khẩu</span>}
+            </div>
+          )}
           {role === 'admin' && (
             <>
               <div 
