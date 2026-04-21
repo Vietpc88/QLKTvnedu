@@ -34,6 +34,8 @@ function handleResponse(e) {
   var sheetTeachers = ss.getSheetByName("DanhSachGV") || ss.insertSheet("DanhSachGV");
   var sheetRooms = ss.getSheetByName("DanhSachPhong") || ss.insertSheet("DanhSachPhong");
   var sheetSchoolInfo = ss.getSheetByName("ThongTinTruong") || ss.insertSheet("ThongTinTruong");
+  var sheetMarkingSubjects = ss.getSheetByName("DanhSachMon") || ss.insertSheet("DanhSachMon");
+  var sheetExamSchedule = ss.getSheetByName("LichThi") || ss.insertSheet("LichThi");
   
   // Sheet cho cấu hình (Lưu JSON)
   var sheetConfig = ss.getSheetByName("Config_JSON") || ss.insertSheet("Config_JSON");
@@ -177,6 +179,16 @@ function handleResponse(e) {
         var schoolArray = [data.schoolInfo];
         saveToSheet(sheetSchoolInfo, schoolArray);
       }
+      if (data.markingSubjects) {
+        var subjectObjects = data.markingSubjects
+          .filter(function(s) { 
+             var l = (s || '').toString().toLowerCase().trim();
+             return l && l !== '' && l.indexOf('empty') === -1 && l.indexOf('_') !== 0; 
+          })
+          .map(function(s) { return {"Môn": s}; });
+        saveToSheet(sheetMarkingSubjects, subjectObjects);
+      }
+      if (data.examSchedule) saveToSheet(sheetExamSchedule, data.examSchedule);
       
       // Xử lý lưu trữ theo hàng (Key-Value) để tránh hoàn toàn việc ghi đè chéo
       if (data.invigilationStore) {
@@ -211,6 +223,16 @@ function handleResponse(e) {
         if (newStore.invigilationAssignments) {
           saveMatrixToSheet(sheetResult, newStore.invigilationAssignments);
         }
+
+        // --- DỌN DẸP DỮ LIỆU DƯ THỪA TRONG CONFIG_JSON ---
+        // Xóa những hàng đã có Sheet riêng để tránh dữ liệu cũ ghi đè dữ liệu mới khi load
+        var keysToPrune = ['roomData', 'markingSubjects', 'examSchedule', 'schoolInfo', 'teacherList', 'adminAccounts'];
+        for (var i = configData.length - 1; i >= 1; i--) {
+          var k = configData[i][0];
+          if (keysToPrune.indexOf(k) !== -1) {
+            sheetConfig.deleteRow(i + 1);
+          }
+        }
       }
 
       // Logic đồng bộ các sheet Phach_
@@ -241,6 +263,8 @@ function handleResponse(e) {
     teacherList: getSheetData(sheetTeachers),
     roomData: getSheetData(sheetRooms),
     schoolInfo: getSheetData(sheetSchoolInfo)[0] || null,
+    markingSubjects: getSheetData(sheetMarkingSubjects).map(function(r) { return r["Môn"]; }),
+    examSchedule: getSheetData(sheetExamSchedule),
     adminAccounts: getSheetData(sheetAdmin)
   };
   

@@ -79,13 +79,11 @@ export const saveToGas = async (gasUrl: string, payload: any, action: 'sync' | '
 
     // Wrap Invigilation and other configs into a JSON store to avoid date formatting issues
     const invigilationKeys = [
-      'examSchedule', 
       'invigilationAssignments', 
       'anonymizationTeam', 
       'secretariatTeam', 
       'teacherConfig', 
       'invigilationConfig',
-      'markingSubjects',
       'englishSpeakingAccounts'
     ];
 
@@ -197,6 +195,8 @@ export const loadFromGas = async (gasUrl: string) => {
       : (rawRoomData.length > 0 ? Object.keys(rawRoomData[0]) : []);
     
     const subjectColumns = originalHeaders.filter(k => {
+      const l = (k || '').toLowerCase().trim();
+      if (!l || l === '' || l.includes('empty') || l.startsWith('_')) return false;
       const lowerKey = k.trim().toLowerCase();
       const isSystemKey = [
         'số điện thoại', 'sđt', 'điện thoại', 'giáo viên', 'stt', 

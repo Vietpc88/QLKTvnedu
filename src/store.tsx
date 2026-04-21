@@ -7,7 +7,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [originalData, setOriginalData] = useState<OriginalDataRow[]>([]);
   const [assignmentData, setAssignmentData] = useState<AssignmentRow[]>([]);
   const [mergedData, setMergedData] = useState<MergedDataRow[]>([]);
-  const [adminAccounts, setAdminAccounts] = useState<AdminAccountRow[]>([]);
+  const [adminAccounts, setAdminAccounts] = useState<AdminAccountRow[]>(() => {
+    try {
+      const saved = localStorage.getItem('adminAccounts');
+      return saved && saved !== 'undefined' ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [gasUrl, setGasUrl] = useState<string>(() => localStorage.getItem('gasUrl') || 'https://script.google.com/macros/s/AKfycbybKCCmQsaBtIrInVwVrCrtFk7lO380bDxvmQJDspNMmOz9yTgTQYfGd4sv8GDXg2AL5g/exec');
   const [subjectColumns, setSubjectColumns] = useState<string[]>([]);
   const [teachers, setTeachers] = useState<string[]>([]);
@@ -147,6 +152,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('markingSubjects', JSON.stringify(markingSubjects));
   }, [markingSubjects]);
+  
+  useEffect(() => {
+    localStorage.setItem('adminAccounts', JSON.stringify(adminAccounts));
+  }, [adminAccounts]);
 
   useEffect(() => {
     localStorage.setItem('exemptTeachers', JSON.stringify(exemptTeachers));

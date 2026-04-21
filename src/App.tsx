@@ -289,8 +289,14 @@ const MainApp = () => {
       // Admin Login logic
       let isValid = false;
       const pwd = credential.trim();
-      if (adminAccounts && adminAccounts.length > 0) {
-        isValid = adminAccounts.some(acc => {
+      
+      // Filter out empty rows that might come from GAS (rows with only headers or empty strings)
+      const validAccounts = adminAccounts.filter(acc => 
+        Object.values(acc).some(val => val && String(val).trim() !== '')
+      );
+
+      if (validAccounts.length > 0) {
+        isValid = validAccounts.some(acc => {
           return Object.values(acc).some(val => String(val).trim() === pwd);
         });
       } else {

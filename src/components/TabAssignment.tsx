@@ -21,8 +21,8 @@ const COLORS = [
 ];
 
 export const TabAssignment: React.FC = () => {
-  const { 
-    roomData, setRoomData, 
+  const {
+    roomData, setRoomData,
     assignmentData, setAssignmentData,
     subjectColumns, setSubjectColumns,
     markingSubjects, setMarkingSubjects,
@@ -49,7 +49,7 @@ export const TabAssignment: React.FC = () => {
   const [showMissingModal, setShowMissingModal] = useState(false);
   const [missingTasks, setMissingTasks] = useState<any[]>([]);
   const [dialog, setDialog] = useState<{ title: string; message: string; type: 'success' | 'error' | 'warning' } | null>(null);
-  
+
   const teacherInputRef = useRef<HTMLInputElement>(null);
   const roomInputRef = useRef<HTMLInputElement>(null);
 
@@ -81,13 +81,13 @@ export const TabAssignment: React.FC = () => {
       // If specificData is provided, use it for the action, otherwise use the full assign list
       const dataToSync = specificData || assign;
       const payload: any = { assignmentData: dataToSync };
-      
+
       // Only send roomData/teacherList for full sync to avoid unnecessary overwrites
       if (action === 'sync') {
         payload.roomData = roomData;
         payload.teacherList = teacherList;
       }
-      
+
       return await saveToGas(gasUrl, payload, action);
     } catch (error) {
       console.error(`Auto-sync failed for action ${action}`, error);
@@ -106,13 +106,13 @@ export const TabAssignment: React.FC = () => {
       const workbook = XLSX.read(data, { type: 'array' });
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
-      
+
       const newTeacherList = json.map((row: any) => {
         const nameKey = Object.keys(row).find(k => ['họ và tên', 'giáo viên', 'tên', 'name'].includes(k.toLowerCase().trim()));
         const phoneKey = Object.keys(row).find(k => ['số điện thoại', 'sđt', 'điện thoại', 'phone'].includes(k.toLowerCase().trim()));
-        
+
         let phone = String(row[phoneKey || ''] || '').trim().replace(/^'/, '');
-        
+
         return {
           name: String(row[nameKey || ''] || '').trim(),
           phone: phone
@@ -120,10 +120,10 @@ export const TabAssignment: React.FC = () => {
       }).filter(t => t.name);
 
       if (newTeacherList.length === 0) throw new Error("File Excel GV không có dữ liệu hợp lệ!");
-      
+
       setTeacherList(newTeacherList);
       setTeachers(newTeacherList.map(t => t.name).sort());
-      
+
       alert(`Đã tải ${newTeacherList.length} giáo viên.`);
     } catch (error: any) {
       alert(`Lỗi: ${error.message}`);
@@ -142,13 +142,13 @@ export const TabAssignment: React.FC = () => {
       const workbook = XLSX.read(data, { type: 'array' });
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
-      
+
       if (json.length === 0) throw new Error("File Excel Phòng không có dữ liệu!");
 
       const firstRow = json[0] as any;
       const roomKey = Object.keys(firstRow).find(k => k.trim().toLowerCase() === 'phòng - khối');
       const sttKey = Object.keys(firstRow).find(k => k.trim().toLowerCase() === 'stt');
-      
+
       if (!roomKey) throw new Error("Thiếu cột 'Phòng - Khối'!");
 
       const newRoomData = json.map((row: any) => {
@@ -164,15 +164,16 @@ export const TabAssignment: React.FC = () => {
       });
 
       setRoomData(newRoomData);
-      
+
       // Extract subjects
       const subjects = Object.keys(firstRow).filter(k => {
         const l = k.toLowerCase().trim();
-        return !['stt', 'phòng - khối'].includes(l) && !l.startsWith('__empty');
+        if (!l || l === '' || l.includes('empty') || l.startsWith('_')) return false;
+        return !['stt', 'phòng - khối'].includes(l);
       });
       setSubjectColumns(subjects);
       setMarkingSubjects(subjects); // Lưu danh sách môn học vào cấu hình hệ thống
-      
+
       alert(`Đã tải ${newRoomData.length} phòng.`);
     } catch (error: any) {
       alert(`Lỗi: ${error.message}`);
@@ -197,7 +198,11 @@ export const TabAssignment: React.FC = () => {
       if (data.roomData && data.roomData.length > 0) {
         setRoomData(data.roomData);
         const allKeys = Object.keys(data.roomData[0]);
-        const cols = allKeys.filter(k => !['stt', 'room'].includes(k.toLowerCase().trim()));
+        const cols = allKeys.filter(k => {
+          const l = k.toLowerCase().trim();
+          if (!l || l === '' || l.includes('empty') || l.startsWith('_')) return false;
+          return !['stt', 'room'].includes(l);
+        });
         setSubjectColumns(cols);
       }
       if (data.assignmentData) {
@@ -206,7 +211,7 @@ export const TabAssignment: React.FC = () => {
       if (data.mergedData) {
         setMergedData(data.mergedData);
       }
-      
+
       alert("Đã tải dữ liệu từ Google Sheets thành công!");
     } catch (error: any) {
       alert(error.message);
@@ -303,7 +308,7 @@ export const TabAssignment: React.FC = () => {
     setLoading(true);
     try {
       const pkgsList = packages.split(',').map(p => p.trim().toUpperCase()).filter(Boolean);
-      
+
       // Match grade exactly
       const rows = roomData.filter(r => {
         const room = String(r.room || '').toLowerCase();
@@ -314,7 +319,7 @@ export const TabAssignment: React.FC = () => {
 
       const matches: any[] = [];
       const notFoundPkgs: string[] = [];
-      
+
       pkgsList.forEach(p => {
         let found = false;
         rows.forEach(r => {
@@ -360,7 +365,7 @@ export const TabAssignment: React.FC = () => {
       if (tInfo) {
         phone = tInfo.phone;
       }
-      
+
       if (!phone) {
         const existingTeacher = assignmentData.find(a => a.teacher === teacher);
         phone = existingTeacher?.phone || '';
@@ -382,13 +387,13 @@ export const TabAssignment: React.FC = () => {
 
       // Send directly to GAS
       const response = await syncData(roomData, [...assignmentData, ...newAssignments], 'append', newAssignments);
-      
+
       // Reload data from server to get the absolute truth
       const latestData = await loadFromGas(gasUrl);
       setAssignmentData(latestData.assignmentData || []);
-      
+
       setPackages('');
-      
+
       let msg = response?.message || `Đã gửi yêu cầu phân công ${matches.length} túi.`;
       if (notFoundPkgs.length > 0) {
         msg += `\n\nLưu ý: Các túi không tồn tại trong dữ liệu gốc: ${notFoundPkgs.join(', ')}`;
@@ -413,13 +418,13 @@ export const TabAssignment: React.FC = () => {
 
   const handleDeleteSelected = () => {
     if (selectedRows.size === 0) return;
-    
+
     if (!showConfirmDelete) {
       setShowConfirmDelete(true);
       setTimeout(() => setShowConfirmDelete(false), 3000);
       return;
     }
-    
+
     const newData = assignmentData.filter(row => !selectedRows.has(getRowKey(row)));
     setAssignmentData(newData);
     setSelectedRows(new Set());
@@ -432,7 +437,7 @@ export const TabAssignment: React.FC = () => {
   const handleColorize = () => {
     const teacherColorMap: Record<string, string> = {};
     let colorIdx = 0;
-    
+
     const newData = assignmentData.map(row => {
       if (!teacherColorMap[row.teacher]) {
         teacherColorMap[row.teacher] = COLORS[colorIdx % COLORS.length];
@@ -440,7 +445,7 @@ export const TabAssignment: React.FC = () => {
       }
       return { ...row, color: teacherColorMap[row.teacher] };
     });
-    
+
     setAssignmentData(newData);
     syncData(roomData, newData);
   };
@@ -453,14 +458,14 @@ export const TabAssignment: React.FC = () => {
 
     const normalizeStr = (s: any) => String(s || '').trim().toLowerCase();
     const requiredTasksMap = new Map<string, any>();
-    
+
     roomData.forEach(r => {
       const roomRaw = String(r.room || '');
       let g = '';
       if (roomRaw.toLowerCase().includes('khối')) {
         g = roomRaw.toLowerCase().split('khối').pop()?.trim() || '';
       }
-      
+
       subjectColumns.forEach(sub => {
         const cellValue = r[sub];
         if (cellValue && String(cellValue).trim()) {
@@ -501,12 +506,12 @@ export const TabAssignment: React.FC = () => {
 
     setMissingTasks(missing);
     setShowMissingModal(true);
-    
+
     if (missing.length === 0) {
-      setDialog({ 
-        title: "Hoàn tất", 
-        message: "Tuyệt vời! Tất cả các túi thi đã được phân công đầy đủ dựa theo bộ lọc hiện tại.", 
-        type: "success" 
+      setDialog({
+        title: "Hoàn tất",
+        message: "Tuyệt vời! Tất cả các túi thi đã được phân công đầy đủ dựa theo bộ lọc hiện tại.",
+        type: "success"
       });
     }
   };
@@ -519,14 +524,14 @@ export const TabAssignment: React.FC = () => {
 
     const normalizeStr = (s: any) => String(s || '').trim().toLowerCase();
     const requiredTasksMap = new Map<string, any>();
-    
+
     roomData.forEach(r => {
       const roomRaw = String(r.room || '');
       let g = '';
       if (roomRaw.toLowerCase().includes('khối')) {
         g = roomRaw.toLowerCase().split('khối').pop()?.trim() || '';
       }
-      
+
       subjectColumns.forEach(sub => {
         const cellValue = r[sub];
         if (cellValue && String(cellValue).trim()) {
@@ -591,14 +596,14 @@ export const TabAssignment: React.FC = () => {
 
     const normalizeStr = (s: any) => String(s || '').trim().toLowerCase();
     const requiredTasksMap = new Map<string, any>();
-    
+
     roomData.forEach(r => {
       const roomRaw = String(r.room || '');
       let g = '';
       if (roomRaw.toLowerCase().includes('khối')) {
         g = roomRaw.toLowerCase().split('khối').pop()?.trim() || '';
       }
-      
+
       subjectColumns.forEach(sub => {
         const cellValue = r[sub];
         if (cellValue && String(cellValue).trim()) {
@@ -650,7 +655,7 @@ export const TabAssignment: React.FC = () => {
     });
 
     const content: any[] = [];
-    
+
     content.push({
       text: 'DANH SÁCH TÚI CHƯA PHÂN CÔNG',
       style: 'header',
@@ -660,7 +665,7 @@ export const TabAssignment: React.FC = () => {
 
     Object.keys(groupedBySubject).forEach((subject, index) => {
       const tasks = groupedBySubject[subject];
-      
+
       content.push({
         text: `Môn: ${subject}`,
         style: 'subheader',
@@ -696,10 +701,10 @@ export const TabAssignment: React.FC = () => {
           vLineWidth: function () { return 0.5; },
           hLineColor: function () { return '#000000'; },
           vLineColor: function () { return '#000000'; },
-          paddingLeft: function() { return 4; },
-          paddingRight: function() { return 4; },
-          paddingTop: function() { return 2; },
-          paddingBottom: function() { return 2; },
+          paddingLeft: function () { return 4; },
+          paddingRight: function () { return 4; },
+          paddingTop: function () { return 2; },
+          paddingBottom: function () { return 2; },
         },
         margin: [0, 0, 0, 15]
       });
@@ -762,16 +767,16 @@ export const TabAssignment: React.FC = () => {
       alert("Không có dữ liệu để xuất!");
       return;
     }
-    
+
     const exportData = filteredAssignmentData.map(row => {
       let phone = row.phone || '';
       if (!phone) {
         const tInfo = teacherList.find(t => String(t.name).trim() === row.teacher);
         phone = tInfo?.phone || '';
       }
-      
+
       let phoneStr = phone ? formatPhoneNumber(phone).replace(/^'/, '') : "";
-      
+
       return {
         "Môn": row.subject,
         "Mã túi": row.package,
@@ -782,9 +787,9 @@ export const TabAssignment: React.FC = () => {
         "ID": row.id || ''
       };
     });
-    
+
     const ws = XLSX.utils.json_to_sheet(exportData);
-    
+
     // Force "Số điện thoại" column to be text
     const range = XLSX.utils.decode_range(ws['!ref'] || "A1:D1");
     for (let R = range.s.r + 1; R <= range.e.r; ++R) {
@@ -804,7 +809,7 @@ export const TabAssignment: React.FC = () => {
       'Giáo viên': 'Nguyễn Văn A',
       'Số điện thoại': '0987654321'
     }]);
-    
+
     const wsRooms = XLSX.utils.json_to_sheet([{
       'STT': '1',
       'Phòng - Khối': 'Phòng 1 Khối 6',
@@ -815,7 +820,7 @@ export const TabAssignment: React.FC = () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, wsTeachers, "GiaoVien");
     XLSX.utils.book_append_sheet(wb, wsRooms, "PhongThi");
-    
+
     XLSX.writeFile(wb, "MauNhapLieu_2File.xlsx");
   };
 
@@ -829,7 +834,7 @@ export const TabAssignment: React.FC = () => {
               {sidePanelType === 'room' && '📂 DỮ LIỆU GỐC (DS PHÒNG THI)'}
               {sidePanelType === 'teacher' && '👥 DANH SÁCH GIÁO VIÊN'}
             </span>
-            <button 
+            <button
               onClick={() => setSidePanelType(null)}
               className="p-1 hover:bg-gray-200 rounded-full text-gray-400 transition-colors"
             >
@@ -876,14 +881,14 @@ export const TabAssignment: React.FC = () => {
                       </tr>
                     ))
                   )}
-                  {((sidePanelType === 'room' && roomData.length === 0) || 
+                  {((sidePanelType === 'room' && roomData.length === 0) ||
                     (sidePanelType === 'teacher' && teacherList.length === 0)) && (
-                    <tr>
-                      <td colSpan={10} className="px-4 py-12 text-center text-gray-400 italic">
-                        Không có dữ liệu hiển thị.
-                      </td>
-                    </tr>
-                  )}
+                      <tr>
+                        <td colSpan={10} className="px-4 py-12 text-center text-gray-400 italic">
+                          Không có dữ liệu hiển thị.
+                        </td>
+                      </tr>
+                    )}
                 </tbody>
               </table>
             </div>
@@ -896,7 +901,7 @@ export const TabAssignment: React.FC = () => {
         "flex flex-col gap-4 shrink-0 lg:shrink lg:min-h-0",
         sidePanelType !== null ? "w-full lg:w-2/3" : "w-full"
       )}>
-        
+
         {/* Configuration Header - 2 Balanced Horizontal Cards */}
         {isAdmin && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 shrink-0">
@@ -912,9 +917,9 @@ export const TabAssignment: React.FC = () => {
                   <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest truncate">Họ tên, SĐT</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2 shrink-0">
-                <button 
+                <button
                   onClick={() => setSidePanelType(sidePanelType === 'teacher' ? null : 'teacher')}
                   className={cn(
                     "text-[9px] font-black px-2 py-1.5 rounded-lg border uppercase transition-all whitespace-nowrap",
@@ -923,7 +928,7 @@ export const TabAssignment: React.FC = () => {
                 >
                   {sidePanelType === 'teacher' ? 'Ẩn' : 'Hiện'}
                 </button>
-                <button 
+                <button
                   onClick={() => teacherInputRef.current?.click()}
                   disabled={loading}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-black transition-all shadow-md shadow-blue-600/10 active:scale-95 text-[10px] uppercase"
@@ -931,7 +936,7 @@ export const TabAssignment: React.FC = () => {
                   <FileUp size={14} />
                   {loading ? '...' : 'NHẬP FILE'}
                 </button>
-                <button 
+                <button
                   onClick={downloadTeacherTemplate}
                   className="text-[9px] font-black text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-1.5 rounded-lg border border-blue-100 uppercase transition-all whitespace-nowrap"
                   title="Tải mẫu Excel"
@@ -956,7 +961,7 @@ export const TabAssignment: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <button 
+                <button
                   onClick={() => setSidePanelType(sidePanelType === 'room' ? null : 'room')}
                   className={cn(
                     "text-[9px] font-black px-2 py-1.5 rounded-lg border uppercase transition-all whitespace-nowrap",
@@ -965,7 +970,7 @@ export const TabAssignment: React.FC = () => {
                 >
                   {sidePanelType === 'room' ? 'Ẩn' : 'Hiện'}
                 </button>
-                <button 
+                <button
                   onClick={() => roomInputRef.current?.click()}
                   disabled={loading}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-black transition-all shadow-md shadow-indigo-600/10 active:scale-95 text-[10px] uppercase"
@@ -973,7 +978,7 @@ export const TabAssignment: React.FC = () => {
                   <FileUp size={14} />
                   {loading ? '...' : 'NHẬP FILE'}
                 </button>
-                <button 
+                <button
                   onClick={downloadRoomTemplate}
                   className="text-[9px] font-black text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-2 py-1.5 rounded-lg border border-indigo-100 uppercase transition-all whitespace-nowrap"
                   title="Tải mẫu Excel"
@@ -1002,7 +1007,7 @@ export const TabAssignment: React.FC = () => {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={handleExportTemplate}
                 className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-all border border-slate-200"
               >
@@ -1015,7 +1020,7 @@ export const TabAssignment: React.FC = () => {
           <div className="flex flex-wrap items-end gap-3">
             <div className="w-24">
               <label className="block text-[11px] text-gray-500 mb-1 uppercase font-semibold">Khối</label>
-              <select 
+              <select
                 value={grade} onChange={e => setGrade(e.target.value)}
                 className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
               >
@@ -1025,7 +1030,7 @@ export const TabAssignment: React.FC = () => {
             </div>
             <div className="w-32">
               <label className="block text-[11px] text-gray-500 mb-1 uppercase font-semibold">Môn</label>
-              <select 
+              <select
                 value={subject} onChange={e => setSubject(e.target.value)}
                 className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
               >
@@ -1035,11 +1040,11 @@ export const TabAssignment: React.FC = () => {
             </div>
             <div className="flex-1 min-w-[150px]">
               <label className="block text-[11px] text-gray-500 mb-1 uppercase font-semibold">Giáo viên</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 list="teacher-list"
-                placeholder="🔍 Nhập tên GV..." 
-                value={teacher} 
+                placeholder="🔍 Nhập tên GV..."
+                value={teacher}
                 onChange={e => setTeacher(e.target.value)}
                 onBlur={e => {
                   if (e.target.value && !teachers.includes(e.target.value)) {
@@ -1054,13 +1059,13 @@ export const TabAssignment: React.FC = () => {
             </div>
             <div className="flex-2 min-w-[200px]">
               <label className="block text-[11px] text-gray-500 mb-1 uppercase font-semibold">Mã túi (cách nhau dấu phẩy)</label>
-              <input 
-                type="text" placeholder="VD: DKZ, YBK,..." 
+              <input
+                type="text" placeholder="VD: DKZ, YBK,..."
                 value={packages} onChange={e => setPackages(e.target.value)}
                 className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm"
               />
             </div>
-            <button 
+            <button
               onClick={handleAssign}
               disabled={loading}
               className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 h-[34px] whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1087,8 +1092,8 @@ export const TabAssignment: React.FC = () => {
               <button onClick={handleExportMissingPDF} className="flex items-center gap-1 px-3 py-1.5 bg-red-500 text-white text-xs rounded hover:bg-red-600">
                 <FileText size={14} /> Xuất Phiếu Túi Thiếu
               </button>
-              <button 
-                onClick={handleDeleteSelected} 
+              <button
+                onClick={handleDeleteSelected}
                 className={cn(
                   "flex items-center gap-1 px-3 py-1.5 text-white text-xs rounded transition-colors",
                   showConfirmDelete ? "bg-red-700 font-bold ring-2 ring-red-300" : "bg-red-600 hover:bg-red-700"
@@ -1097,14 +1102,14 @@ export const TabAssignment: React.FC = () => {
                 <Trash2 size={14} /> {showConfirmDelete ? "Xác nhận xóa?" : "Xóa chọn"}
               </button>
               <div className="flex gap-1 border-l pl-2 border-gray-300">
-                <button 
-                  onClick={() => handleBulkStatusChange('Xong')} 
+                <button
+                  onClick={() => handleBulkStatusChange('Xong')}
                   className="flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-700 text-xs rounded hover:bg-green-200 border border-green-200"
                 >
                   <CheckCircle2 size={14} /> Chọn Xong
                 </button>
-                <button 
-                  onClick={() => handleBulkStatusChange('Chưa')} 
+                <button
+                  onClick={() => handleBulkStatusChange('Chưa')}
                   className="flex items-center gap-1 px-3 py-1.5 bg-red-100 text-red-700 text-xs rounded hover:bg-red-200 border border-red-200"
                 >
                   <XCircle size={14} /> Chọn Chưa
@@ -1118,28 +1123,28 @@ export const TabAssignment: React.FC = () => {
 
           <div className="flex flex-wrap items-center gap-2 mb-3 shrink-0">
             <span className="text-sm font-medium text-gray-700 whitespace-nowrap hidden sm:inline">Lọc:</span>
-            <select 
+            <select
               value={filterGrade} onChange={e => setFilterGrade(e.target.value)}
               className="border border-gray-300 rounded px-2 py-1.5 text-sm w-full sm:w-28"
             >
               <option value="" key="all-grades">Tất cả khối</option>
               {grades.filter(Boolean).map(g => <option key={`filter-g-${g}`} value={g}>{g}</option>)}
             </select>
-            <select 
+            <select
               value={filterSubject} onChange={e => setFilterSubject(e.target.value)}
               className="border border-gray-300 rounded px-2 py-1.5 text-sm w-full sm:w-36"
             >
               <option value="" key="all-subjects">Tất cả môn</option>
               {subjectColumns.filter(Boolean).map(s => <option key={`filter-s-${s}`} value={s}>{s}</option>)}
             </select>
-            <select 
+            <select
               value={filterTeacher} onChange={e => setFilterTeacher(e.target.value)}
               className="border border-gray-300 rounded px-2 py-1.5 text-sm w-full sm:w-48"
             >
               <option value="" key="all-teachers">Tất cả giáo viên</option>
               {teachers.filter(Boolean).map(t => <option key={`filter-t-${t}`} value={t}>{t}</option>)}
             </select>
-            <select 
+            <select
               value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
               className="border border-gray-300 rounded px-2 py-1.5 text-sm w-full sm:w-36"
             >
@@ -1149,8 +1154,8 @@ export const TabAssignment: React.FC = () => {
             </select>
             <div className="relative flex-1 min-w-[200px] w-full">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <input 
-                type="text" placeholder="Nhập mã túi cần tìm..." 
+              <input
+                type="text" placeholder="Nhập mã túi cần tìm..."
                 value={packageSearch} onChange={e => setPackageSearch(e.target.value)}
                 className="w-full border border-gray-300 rounded pl-8 pr-3 py-1.5 text-sm"
               />
@@ -1162,8 +1167,8 @@ export const TabAssignment: React.FC = () => {
               <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0 z-10">
                 <tr>
                   <th className="px-3 py-2 w-10 text-center">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       onChange={(e) => {
                         if (e.target.checked) {
                           setSelectedRows(new Set(filteredAssignmentData.map(getRowKey)));
@@ -1186,14 +1191,14 @@ export const TabAssignment: React.FC = () => {
               </thead>
               <tbody>
                 {filteredAssignmentData.map((row, i) => (
-                  <tr 
-                    key={getRowKey(row, i)} 
+                  <tr
+                    key={getRowKey(row, i)}
                     className="border-b hover:opacity-90"
                     style={{ backgroundColor: row.color || 'white' }}
                   >
                     <td className="px-3 py-2 text-center">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={selectedRows.has(getRowKey(row))}
                         onChange={(e) => {
                           const key = getRowKey(row);
@@ -1217,8 +1222,8 @@ export const TabAssignment: React.FC = () => {
                         onChange={(e) => handleStatusChange(row, e.target.value)}
                         className={cn(
                           "px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer outline-none",
-                          (!row.status || row.status === 'Chưa') 
-                            ? "bg-red-100 text-red-700" 
+                          (!row.status || row.status === 'Chưa')
+                            ? "bg-red-100 text-red-700"
                             : "bg-green-100 text-green-700"
                         )}
                       >
@@ -1250,8 +1255,8 @@ export const TabAssignment: React.FC = () => {
                 {dialog.type === 'success' && <CheckCircle2 className="text-green-500" size={28} />}
                 <h2 className={cn(
                   "text-xl font-bold",
-                  dialog.type === 'error' ? "text-red-600" : 
-                  dialog.type === 'warning' ? "text-yellow-600" : "text-green-600"
+                  dialog.type === 'error' ? "text-red-600" :
+                    dialog.type === 'warning' ? "text-yellow-600" : "text-green-600"
                 )}>
                   {dialog.title}
                 </h2>
@@ -1260,12 +1265,12 @@ export const TabAssignment: React.FC = () => {
                 {dialog.message}
               </div>
               <div className="flex justify-end">
-                <button 
-                   onClick={() => setDialog(null)}
+                <button
+                  onClick={() => setDialog(null)}
                   className={cn(
                     "px-6 py-2 text-white rounded-lg font-medium transition-colors shadow-sm",
-                    dialog.type === 'error' ? "bg-red-600 hover:bg-red-700" : 
-                    dialog.type === 'warning' ? "bg-yellow-500 hover:bg-yellow-600" : "bg-green-600 hover:bg-green-700"
+                    dialog.type === 'error' ? "bg-red-600 hover:bg-red-700" :
+                      dialog.type === 'warning' ? "bg-yellow-500 hover:bg-yellow-600" : "bg-green-600 hover:bg-green-700"
                   )}
                 >
                   Đã hiểu
@@ -1287,20 +1292,20 @@ export const TabAssignment: React.FC = () => {
                   <div>
                     <h2 className="text-xl font-black text-amber-900 uppercase tracking-tight">TÚI BÀI CHƯA PHÂN CÔNG</h2>
                     <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest mt-0.5">
-                      {filterGrade || filterSubject 
+                      {filterGrade || filterSubject
                         ? `Đang lọc: ${filterGrade ? `Khối ${filterGrade}` : ''} ${filterSubject ? `- ${filterSubject}` : ''}`
                         : 'Phạm vi: Toàn bộ kỳ thi'}
                     </p>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => setShowMissingModal(false)}
                   className="p-2 hover:bg-amber-100 rounded-full text-amber-400 transition-colors"
                 >
                   <XCircle size={28} />
                 </button>
               </div>
-              
+
               <div className="flex-1 overflow-auto p-6 bg-white min-h-0">
                 {missingTasks.length > 0 ? (
                   <div className="inline-block min-w-full align-middle overflow-x-auto border border-gray-100 rounded-2xl shadow-sm">
@@ -1339,14 +1344,14 @@ export const TabAssignment: React.FC = () => {
               </div>
 
               <div className="p-6 bg-slate-50 border-t border-gray-100 flex justify-end gap-3 shrink-0">
-                <button 
+                <button
                   onClick={() => setShowMissingModal(false)}
-                   className="px-8 py-3 bg-white border border-gray-200 text-gray-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-100 transition-all font-sans"
+                  className="px-8 py-3 bg-white border border-gray-200 text-gray-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-100 transition-all font-sans"
                 >
                   Đóng cửa sổ
                 </button>
                 {missingTasks.length > 0 && (
-                  <button 
+                  <button
                     onClick={() => { handleExportMissingPDF(); setShowMissingModal(false); }}
                     className="px-8 py-3 bg-amber-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-600/20 active:scale-95"
                   >
