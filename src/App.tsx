@@ -6,6 +6,7 @@ import { TabTeacher } from './components/TabTeacher';
 import { TabInvigilation } from './components/TabInvigilation';
 import { TabSpeakingGrade } from './components/TabSpeakingGrade';
 import { TabSpeakingReport } from './components/TabSpeakingReport';
+import { TabStatistics } from './components/TabStatistics';
 import { GasSetupModal } from './components/GasSetupModal';
 import { ConfigEnglishModal } from './components/ConfigEnglishModal';
 import { SplashScreen } from './components/SplashScreen';
@@ -13,7 +14,7 @@ import { ChangePasswordModal } from './components/ChangePasswordModal';
 import { 
   Settings, Wrench, Trash2, LogOut, AlertCircle, Calendar, 
   Download, Upload, LayoutDashboard, RefreshCw, GraduationCap, 
-  UserCog, Mic, KeyRound, Menu, X, Bell, ChevronRight, User
+  UserCog, Mic, KeyRound, Menu, X, Bell, ChevronRight, User, BarChart3
 } from 'lucide-react';
 import { cn, formatPhoneNumber } from './lib/utils';
 import { loadFromGas, saveToGas } from './lib/gas';
@@ -372,6 +373,7 @@ const MainApp = () => {
 
   const navItems = [
     { id: 'assignment', label: 'Phân công chấm', icon: Wrench, roles: ['admin', 'teacher'] },
+    { id: 'statistics', label: 'Thống kê', icon: BarChart3, roles: ['admin'] },
     { id: 'merger', label: 'Ghép phách', icon: LayoutDashboard, roles: ['admin'] },
     { id: 'invigilation', label: 'Coi thi & Chấm thi', icon: Calendar, roles: ['admin'] },
     { id: 'speaking_report', label: 'Điểm Nói', icon: Mic, roles: ['admin'] },
@@ -527,33 +529,7 @@ const MainApp = () => {
 
         {/* Content Container */}
         <div className="flex-1 overflow-hidden p-8 flex flex-col min-h-0 bg-bg-main">
-          {/* Action Toolbar for Admin */}
-          {role === 'admin' && (
-            <div className="mb-6 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={handleBackup}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-border-soft rounded-xl text-xs font-bold text-text-body hover:bg-slate-50 transition-all shadow-sm"
-                >
-                  <Download size={14} /> Sao lưu JSON
-                </button>
-                <button 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-border-soft rounded-xl text-xs font-bold text-text-body hover:bg-slate-50 transition-all shadow-sm"
-                >
-                  <Upload size={14} /> Phục hồi
-                  <input type="file" ref={fileInputRef} onChange={handleFileSelected} accept=".json" className="hidden" />
-                </button>
-              </div>
-
-              <button 
-                onClick={() => setShowResetModal(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-rose-50 text-rose-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-rose-100 transition-all border border-rose-100/50"
-              >
-                <Trash2 size={14} /> Reset Kỳ Thi
-              </button>
-            </div>
-          )}
+          {/* Action Toolbar removed per user request to hide it from all tabs */}
 
           {/* Dynamic Content Card */}
           <div className="flex-1 overflow-hidden flex flex-col bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl transition-all overflow-hidden">
@@ -576,7 +552,14 @@ const MainApp = () => {
                   <TabTeacher />
                 ) : (
                   <div className="flex-1 min-h-0 relative">
-                    {activeTab === 'assignment' && <TabAssignment />}
+                    {activeTab === 'assignment' && (
+                      <TabAssignment 
+                        onBackup={handleBackup}
+                        onRestore={() => fileInputRef.current?.click()}
+                        onReset={() => setShowResetModal(true)}
+                      />
+                    )}
+                    {activeTab === 'statistics' && <TabStatistics />}
                     {activeTab === 'merger' && <TabMerger />}
                     {activeTab === 'invigilation' && <TabInvigilation />}
                     {activeTab === 'speaking_report' && <TabSpeakingReport />}

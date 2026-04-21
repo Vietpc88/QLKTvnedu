@@ -20,7 +20,13 @@ const COLORS = [
   '#E6E6FA', '#FFE4B5'
 ];
 
-export const TabAssignment: React.FC = () => {
+interface Props {
+  onBackup?: () => void;
+  onRestore?: () => void;
+  onReset?: () => void;
+}
+
+export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset }) => {
   const {
     roomData, setRoomData,
     assignmentData, setAssignmentData,
@@ -992,27 +998,57 @@ export const TabAssignment: React.FC = () => {
         )}
 
         {/* Assignment Form */}
-        {/* Action Header */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-3 shrink-0 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              <span className="text-xs bg-slate-100 text-slate-500 px-3 py-1.5 rounded-full font-bold uppercase tracking-widest border border-slate-200 shadow-inner">
-                {currentFile || 'Trực tuyến'}
+        {/* Unified Toolbar & Form */}
+        <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-4 shrink-0 shadow-sm">
+          {/* Main Toolbar - Compact Single Row */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <span className={cn(
+                "px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-inner transition-all",
+                currentFile ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-emerald-50 text-emerald-600 border-emerald-100"
+              )}>
+                {currentFile ? `📁 ${currentFile}` : '🌐 TRỰC TUYẾN'}
               </span>
               {isSyncing && (
-                <div className="flex items-center gap-1.5 text-blue-500 animate-pulse">
-                  <RefreshCw size={14} className="animate-spin" />
-                  <span className="text-xs font-black uppercase tracking-widest">Đang đồng bộ Cloud...</span>
+                <div className="flex items-center gap-1.5 text-blue-500 animate-pulse ml-2">
+                  <RefreshCw size={12} className="animate-spin" />
+                  <span className="text-[9px] font-black uppercase tracking-widest">Đang lưu...</span>
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-3">
+            
+            <div className="flex flex-wrap items-center gap-2">
+              {isAdmin && (
+                <>
+                  <button
+                    onClick={onBackup}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 rounded-xl text-[11px] font-black text-gray-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-widest"
+                  >
+                    <Download size={14} className="text-blue-500" /> Sao lưu
+                  </button>
+                  <button
+                    onClick={onRestore}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 rounded-xl text-[11px] font-black text-gray-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-widest"
+                  >
+                    <Upload size={14} className="text-emerald-500" /> Phục hồi
+                  </button>
+                  <div className="h-6 w-px bg-gray-200 mx-1" />
+                </>
+              )}
               <button
                 onClick={handleExportTemplate}
-                className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 text-gray-700 text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-slate-100 transition-all border border-gray-200"
+                className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 text-gray-700 text-[10px] font-black uppercase tracking-tight rounded-lg hover:bg-slate-100 transition-all border border-gray-200"
               >
-                <FileDown size={14} /> Mẫu Toàn bộ
+                <FileDown size={14} className="text-amber-500" /> Mẫu toàn bộ
               </button>
+              {isAdmin && (
+                <button
+                  onClick={onReset}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-rose-50 text-rose-600 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-100 transition-all border border-rose-100"
+                >
+                  <Trash2 size={14} /> Reset
+                </button>
+              )}
             </div>
           </div>
 
@@ -1068,7 +1104,7 @@ export const TabAssignment: React.FC = () => {
             <button
               onClick={handleAssign}
               disabled={loading}
-              className="flex items-center justify-center gap-2 px-8 py-3 bg-[var(--color-primary)] text-white rounded-lg transition-all active:scale-95 font-bold hover:bg-[var(--color-primary-hover)] hover:shadow-lg hover:shadow-indigo-500/20 h-[46px]"
+              className="flex items-center justify-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl transition-all active:scale-95 font-black uppercase tracking-widest text-[11px] hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/20 h-[46px] shadow-md shadow-blue-500/10"
             >
               {loading ? 'ĐANG XỬ LÝ' : 'PHÂN CÔNG'}
             </button>
@@ -1076,7 +1112,7 @@ export const TabAssignment: React.FC = () => {
         </div>
 
         {/* Results Card */}
-        <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl transition-all p-6 flex flex-col flex-1 lg:overflow-hidden min-h-[500px] lg:min-h-0">
+        <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl transition-all p-5 flex flex-col flex-1 lg:overflow-hidden min-h-[400px] lg:min-h-0">
           <div className="flex flex-wrap justify-between gap-4 mb-6 items-center shrink-0">
             <h3 className="text-lg font-extrabold text-text-heading">Danh sách Phân công</h3>
             <div className="flex flex-wrap gap-2">
