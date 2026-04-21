@@ -15,7 +15,7 @@ import {
   Download, Upload, LayoutDashboard, RefreshCw, GraduationCap, 
   UserCog, Mic, KeyRound, Menu, X, Bell, ChevronRight, User
 } from 'lucide-react';
-import { cn } from './lib/utils';
+import { cn, formatPhoneNumber } from './lib/utils';
 import { loadFromGas, saveToGas } from './lib/gas';
 import { downloadJSON, readJSONFile } from './lib/backupUtils';
 
@@ -89,7 +89,13 @@ const MainApp = () => {
       if (data.secretariatPairs && data.secretariatPairs.length > 0) setSecretariatPairs(data.secretariatPairs);
       if (data.schoolInfo) setSchoolInfo(data.schoolInfo);
       if (data.markingSubjects && data.markingSubjects.length > 0) setMarkingSubjects(data.markingSubjects);
-      if (data.teacherList && data.teacherList.length > 0) setTeacherList(data.teacherList);
+      if (data.teacherList && data.teacherList.length > 0) {
+        const normalizedList = data.teacherList.map((t: any) => ({
+          ...t,
+          phone: formatPhoneNumber(t.phone)
+        }));
+        setTeacherList(normalizedList);
+      }
       if (data.roomData && data.roomData.length > 0) setRoomData(data.roomData);
       
       const finalSubjects = (data.subjectColumns && data.subjectColumns.length > 0) 
@@ -107,7 +113,13 @@ const MainApp = () => {
           });
         }
         if (data.assignmentData) {
-          data.assignmentData.forEach((a: any) => tSet.add(a.teacher));
+          // Temporarily normalize assignment data phone numbers to show correctly in UI
+          const normalizedAssignments = data.assignmentData.map((a: any) => ({
+            ...a,
+            phone: formatPhoneNumber(a.phone)
+          }));
+          setAssignmentData(normalizedAssignments);
+          normalizedAssignments.forEach((a: any) => tSet.add(a.teacher));
         }
         setTeachers(Array.from(tSet).sort());
       }
@@ -273,23 +285,22 @@ const MainApp = () => {
         setLoginError('Tài khoản hoặc mật khẩu không chính xác!');
       }
     } else {
-      const inputPhone = credential.trim();
+      const inputPhone = formatPhoneNumber(credential.trim());
       if (!inputPhone) {
         setLoginError('Vui lòng nhập số điện thoại!');
         return;
       }
       let foundTeacher = '';
-      const cleanInput = inputPhone.replace(/\D/g, '');
       const assignment = assignmentData.find(a => {
-        const cleanPhone = (a.phone || '').replace(/\D/g, '');
-        return cleanPhone === cleanInput && cleanInput !== '';
+        const storedPhone = formatPhoneNumber(a.phone);
+        return storedPhone === inputPhone && inputPhone !== '';
       });
       if (assignment) {
         foundTeacher = assignment.teacher;
       } else {
         const t = teacherList.find(r => {
-          const val = String(r.phone || '').replace(/\D/g, '');
-          return val === cleanInput && cleanInput !== '';
+          const storedPhone = formatPhoneNumber(r.phone);
+          return storedPhone === inputPhone && inputPhone !== '';
         });
         if (t) foundTeacher = t.name;
       }
