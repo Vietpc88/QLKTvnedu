@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../store';
 import { saveToGas, loadFromGas } from '../lib/gas';
-import { Search, AlertCircle, XCircle, CheckCircle2 } from 'lucide-react';
+import { Search, AlertCircle, XCircle, CheckCircle2, Trash2 } from 'lucide-react';
 import { cn, formatPhoneNumber } from '../lib/utils';
 
 const COLORS = [
@@ -89,6 +89,35 @@ export const TabTeacher: React.FC = () => {
     await syncData(roomData, updatedData, 'updateStatus', updatedRows);
     setDialog({ title: 'Thành công', message: `Đã cập nhật trạng thái cho ${updatedRows.length} túi bài.`, type: 'success' });
   };
+
+  const handleDelete = async (row: any) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa phân công túi [${row.package}] này không?`)) return;
+    
+    setLoading(true);
+    try {
+      const updatedData = assignmentData.filter(a => getRowKey(a) !== getRowKey(row));
+      setAssignmentData(updatedData);
+      
+      // Sync delete action to GAS
+      await syncData(roomData, updatedData, 'delete', [row]);
+      
+      setDialog({
+        title: 'Thành công',
+        message: `Đã xóa phân công túi ${row.package} thành công.`,
+        type: 'success'
+      });
+    } catch (error: any) {
+      setDialog({
+        title: 'Lỗi',
+        message: 'Không thể xóa phân công. Vui lòng thử lại.\n' + error.message,
+        type: 'error'
+      });
+      refreshData(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const grades = useMemo(() => {
     const gSet = new Set<string>();
@@ -405,6 +434,7 @@ export const TabTeacher: React.FC = () => {
                 <th className="px-4 py-2">Mã túi</th>
                 <th className="px-4 py-2">Thời gian nhập</th>
                 <th className="px-4 py-2 text-center">Trạng thái</th>
+                <th className="px-4 py-2 text-center">Thao tác</th>
               </tr>
             </thead>
             <tbody>
@@ -432,6 +462,15 @@ export const TabTeacher: React.FC = () => {
                       {row.status || 'Chưa'}
                     </span>
                   </td>
+                  <td className="px-4 py-2 text-center">
+                    <button 
+                      onClick={() => handleDelete(row)}
+                      className="p-1.5 text-rose-600 hover:bg-rose-100 rounded-lg transition-colors"
+                      title="Xóa phân công này"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -457,6 +496,12 @@ export const TabTeacher: React.FC = () => {
                   >
                     {row.status || 'Chưa'}
                   </div>
+                  <button 
+                    onClick={() => handleDelete(row)}
+                    className="p-2 text-rose-600 bg-rose-50 rounded-lg active:bg-rose-100"
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </div>
                 <div className="grid grid-cols-2 gap-y-2 text-sm">
                   <div>

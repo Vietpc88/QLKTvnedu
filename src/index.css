@@ -1,1 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
+
+/* 
+  Redesigning index.css to avoid IDE Warnings while keeping Snov.io aesthetic.
+  We use standard CSS variables in :root which Tailwind v4 handles automatically.
+  To avoid @apply warnings, we've moved component-specific classes to the components.
+*/
+
+:root {
+  --color-primary: #7356f1;
+  --color-primary-hover: #5d44d6;
+  --color-primary-light: #ece9ff;
+  --color-accent: #78c915;
+  --color-accent-hover: #68ad12;
+  --color-bg-main: #f9fafb;
+  --color-bg-card: #ffffff;
+  --color-text-heading: #191919;
+  --color-text-body: #4a4a4a;
+  
+  --font-manrope: "Manrope", sans-serif;
+  
+  --radius-2xl: 24px;
+  --radius-xl: 16px;
+  --radius-lg: 12px;
+  
+  --shadow-soft: 0 4px 20px -2px rgba(115, 86, 241, 0.05);
+  --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.04);
+  
+  --sidebar-width: 280px;
+}
+
+body {
+  background-color: var(--color-bg-main);
+  color: var(--color-text-body);
+  font-family: var(--font-manrope);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text-heading);
+  font-family: var(--font-manrope);
+  font-weight: 700;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}

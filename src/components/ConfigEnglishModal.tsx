@@ -3,6 +3,8 @@ import { useAppContext } from '../store';
 import { X, Plus, Trash2, Save, User as UserIcon } from 'lucide-react';
 import { EnglishSpeakingAccount } from '../types';
 import { saveToGas } from '../lib/gas';
+import * as XLSX from 'xlsx';
+import { Download } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -80,6 +82,36 @@ export const ConfigEnglishModal: React.FC<Props> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleExportExcel = () => {
+    if (accounts.length === 0) {
+      alert("Không có tài khoản nào để xuất!");
+      return;
+    }
+
+    const dataRows = accounts.map((acc, index) => ({
+      "STT": index + 1,
+      "Giáo viên": acc.teacherName,
+      "Tài khoản (SĐT)": acc.username,
+      "Mật khẩu": acc.password,
+      "Lớp phân công": acc.assignedClassesInput
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataRows);
+    
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 5 },
+      { wch: 25 },
+      { wch: 20 },
+      { wch: 15 },
+      { wch: 30 }
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Accounts");
+    XLSX.writeFile(wb, `Danh_sach_tai_khoan_GV_Tieng_Anh_${new Date().toISOString().slice(0,10)}.xlsx`);
+  };
+
   return (
     <div className="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in duration-200">
@@ -90,9 +122,18 @@ export const ConfigEnglishModal: React.FC<Props> = ({ isOpen, onClose }) => {
             </div>
             <h2 className="text-xl font-bold text-gray-800">Cấu hình Tài khoản Tiếng Anh</h2>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-200 rounded-lg">
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleExportExcel}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-lg font-bold text-sm hover:bg-indigo-100 transition-all shadow-sm"
+              title="Xuất danh sách ra Excel"
+            >
+              <Download size={18} /> Xuất Excel
+            </button>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-200 rounded-lg">
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         <div className="p-6 overflow-auto flex-1 bg-slate-50/50">

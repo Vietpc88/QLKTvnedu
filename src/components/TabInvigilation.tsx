@@ -2,7 +2,7 @@ import React, { useState, useRef, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { useAppContext } from '../store';
 import { saveToGas } from '../lib/gas';
-import { Upload, Save, Download, Search, Trash2, Calendar, Users, User, Briefcase, Play, FileText, CheckCircle2, AlertCircle, Plus, Settings } from 'lucide-react';
+import { Upload, Save, Download, Search, Trash2, Calendar, Users, User, Briefcase, Play, FileText, CheckCircle2, AlertCircle, Plus, Settings, LayoutGrid, UserMinus, BookOpen, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { ExamScheduleRow, MatrixAssignment, TeacherConfig } from '../types';
 
@@ -25,7 +25,7 @@ export const TabInvigilation: React.FC = () => {
   } = useAppContext();
 
   const [loading, setLoading] = useState(false);
-  const [activeSubTab, setActiveSubTab] = useState<'schedule' | 'config' | 'assignment'>('schedule');
+  const [activeSubTab, setActiveSubTab] = useState<'schedule' | 'anonymization' | 'secretariat' | 'experts' | 'exempt' | 'matrix' | 'settings'>('schedule');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Manual Schedule States
@@ -113,6 +113,15 @@ export const TabInvigilation: React.FC = () => {
         const t2 = parseDate(d2).getTime();
         if (t1 !== t2) return t1 - t2;
         return s1 === 'Sáng' ? -1 : 1;
+    });
+  }, [examSchedule]);
+  const uniqueDates = useMemo(() => {
+    return (Array.from(new Set(examSchedule.map(s => s.date))) as string[]).sort((a, b) => {
+      const parseDate = (d: string) => {
+        const parts = d.split('/');
+        return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0])).getTime();
+      };
+      return parseDate(a) - parseDate(b);
     });
   }, [examSchedule]);
 
@@ -1097,944 +1106,894 @@ export const TabInvigilation: React.FC = () => {
   const DayOptions = ['2', '3', '4', '5', '6', '7', 'CN'];
 
   return (
-    <div className="flex flex-col gap-4 h-full overflow-hidden">
-      {/* Tab Navigation */}
-      <div className="flex border-b border-gray-200">
-        <button
-          onClick={() => setActiveSubTab('schedule')}
-          className={cn(
-            "px-6 py-3 font-medium text-sm transition-colors relative",
-            activeSubTab === 'schedule' ? "text-blue-600" : "text-gray-500 hover:text-gray-700"
-          )}
-        >
-          <div className="flex items-center gap-2">
-            <Calendar size={18} /> Lịch thi
+    <div className="flex h-full overflow-hidden bg-[var(--color-bg-main)] font-manrope">
+      {/* Sub-Sidebar */}
+      <div className="w-[280px] border-r border-gray-100 flex flex-col bg-white shrink-0 shadow-[4px_0_20px_-10px_rgba(0,0,0,0.05)] z-10">
+        <div className="p-6 border-b border-gray-50 bg-slate-50/30">
+          <h3 className="text-xs font-extrabold text-[var(--color-text-heading)] uppercase tracking-[0.2em] opacity-60 flex items-center gap-2">
+            <LayoutGrid size={14} className="text-[var(--color-primary)]" /> Coi & Chấm thi
+          </h3>
+        </div>
+        
+        <div className="flex-1 overflow-auto p-4 space-y-6">
+          {/* Section: Planning */}
+          <div>
+            <p className="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Lập kế hoạch</p>
+            <div className="space-y-1">
+              <button
+                onClick={() => setActiveSubTab('schedule')}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer font-bold text-sm",
+                  activeSubTab === 'schedule' 
+                    ? "bg-[var(--color-primary-light)] text-[var(--color-primary)]" 
+                    : "text-[var(--color-text-body)] hover:bg-slate-50 hover:text-[var(--color-text-heading)]"
+                )}
+              >
+                <Calendar size={18} />
+                <span>Lịch thi</span>
+              </button>
+              <button
+                onClick={() => setActiveSubTab('settings')}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer font-bold text-sm",
+                  activeSubTab === 'settings' 
+                    ? "bg-[var(--color-primary-light)] text-[var(--color-primary)]" 
+                    : "text-[var(--color-text-body)] hover:bg-slate-50 hover:text-[var(--color-text-heading)]"
+                )}
+              >
+                <Settings size={18} />
+                <span>Thiết lập chung</span>
+              </button>
+            </div>
           </div>
-          {activeSubTab === 'schedule' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
-        </button>
-        <button
-          onClick={() => setActiveSubTab('config')}
-          className={cn(
-            "px-6 py-3 font-medium text-sm transition-colors relative",
-            activeSubTab === 'config' ? "text-blue-600" : "text-gray-500 hover:text-gray-700"
-          )}
-        >
-          <div className="flex items-center gap-2">
-            <Briefcase size={18} /> Cấu hình
+
+          {/* Section: Resources */}
+          <div>
+            <p className="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Nguồn lực</p>
+            <div className="space-y-1">
+              <button
+                onClick={() => setActiveSubTab('anonymization')}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer font-bold text-sm",
+                  activeSubTab === 'anonymization' 
+                    ? "bg-[var(--color-primary-light)] text-[var(--color-primary)] shadow-sm" 
+                    : "text-[var(--color-text-body)] hover:bg-slate-50 hover:text-[var(--color-text-heading)]"
+                )}
+              >
+                <div className={cn("p-1.5 rounded-lg transition-colors", activeSubTab === 'anonymization' ? "bg-white" : "bg-gray-50")}>
+                  <LayoutGrid size={16} />
+                </div>
+                <span>Tổ Làm phách</span>
+              </button>
+              <button
+                onClick={() => setActiveSubTab('secretariat')}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer font-bold text-sm",
+                  activeSubTab === 'secretariat' 
+                    ? "bg-[var(--color-primary-light)] text-[var(--color-primary)] shadow-sm" 
+                    : "text-[var(--color-text-body)] hover:bg-slate-50 hover:text-[var(--color-text-heading)]"
+                )}
+              >
+                <div className={cn("p-1.5 rounded-lg transition-colors", activeSubTab === 'secretariat' ? "bg-white" : "bg-gray-50")}>
+                  <Users size={16} />
+                </div>
+                <span>Tổ Thư ký</span>
+              </button>
+              <button
+                onClick={() => setActiveSubTab('experts')}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer font-bold text-sm",
+                  activeSubTab === 'experts' 
+                    ? "bg-[var(--color-primary-light)] text-[var(--color-primary)]" 
+                    : "text-[var(--color-text-body)] hover:bg-slate-50 hover:text-[var(--color-text-heading)]"
+                )}
+              >
+                <BookOpen size={18} />
+                <span>GV & Chuyên môn</span>
+              </button>
+              <button
+                onClick={() => setActiveSubTab('exempt')}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer font-bold text-sm",
+                  activeSubTab === 'exempt' 
+                    ? "bg-[var(--color-primary-light)] text-[var(--color-primary)]" 
+                    : "text-[var(--color-text-body)] hover:bg-slate-50 hover:text-[var(--color-text-heading)]"
+                )}
+              >
+                <UserMinus size={18} />
+                <span>Danh sách Miễn</span>
+              </button>
+            </div>
           </div>
-          {activeSubTab === 'config' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
-        </button>
-        <button
-          onClick={() => setActiveSubTab('assignment')}
-          className={cn(
-            "px-6 py-3 font-medium text-sm transition-colors relative",
-            activeSubTab === 'assignment' ? "text-blue-600" : "text-gray-500 hover:text-gray-700"
-          )}
-        >
-          <div className="flex items-center gap-2">
-            <FileText size={18} /> Bảng phân công
+
+          {/* Section: Execution */}
+          <div>
+            <p className="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Thực hiện</p>
+            <div className="space-y-1">
+              <button
+                onClick={() => setActiveSubTab('matrix')}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer font-bold text-sm",
+                  activeSubTab === 'matrix' 
+                    ? "bg-[var(--color-primary-light)] text-[var(--color-primary)]" 
+                    : "text-[var(--color-text-body)] hover:bg-slate-50 hover:text-[var(--color-text-heading)]"
+                )}
+              >
+                <FileText size={18} />
+                <span>Kết quả Phân công</span>
+              </button>
+            </div>
           </div>
-          {activeSubTab === 'assignment' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
-        </button>
+        </div>
+
+        {/* Sidebar Footer: Info & Sync */}
+        <div className="p-4 border-t border-gray-50 bg-slate-50/20 space-y-3">
+          <div className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
+             <div className="flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+               <span>Lịch thi</span>
+               <span className={cn(examSchedule.length > 0 ? "text-green-500" : "text-amber-500")}>
+                 {examSchedule.length > 0 ? 'Đã tải' : 'Trống'}
+               </span>
+             </div>
+             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+               <div 
+                 className={cn("h-full transition-all duration-500", examSchedule.length > 0 ? "bg-green-500 w-full" : "bg-amber-500 w-1/4")}
+               />
+             </div>
+          </div>
+          <button 
+            onClick={handleSaveConfigToServer}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-primary)] text-white rounded-xl transition-all active:scale-95 font-bold text-sm hover:bg-[var(--color-primary-hover)] shadow-lg shadow-indigo-200"
+          >
+            <Save size={16} /> 
+            {loading ? 'Đang đồng bộ...' : 'Đồng bộ Dữ liệu'}
+          </button>
+        </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="flex-1 overflow-auto p-4 bg-gray-50 rounded-lg border border-gray-200">
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-auto bg-[var(--color-bg-main)] p-6 lg:p-10">
+        
+        {/* TAB: SCHEDULE */}
         {activeSubTab === 'schedule' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-4">
-              <div className="bg-white p-6 rounded-lg border border-dashed border-gray-300 flex flex-col items-center justify-center gap-4 shadow-sm h-[220px]">
-                <Upload className="text-blue-500" size={48} />
-                <div className="text-center">
-                  <h3 className="font-bold text-lg">Tải lên lịch thi</h3>
-                  <p className="text-sm text-gray-500 max-w-sm">
-                    Chọn file Excel chứa các cột: Thứ, Ngày, Buổi, Khối, Môn.
-                  </p>
-                </div>
-                <input 
-                  type="file" ref={fileInputRef} onChange={handleScheduleUpload} accept=".xlsx,.xls" className="hidden" 
-                />
-                <button 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
-                  disabled={loading}
-                >
-                  {loading ? 'Đang xử lý...' : 'Chọn file Excel'}
-                </button>
-              </div>
-
-              {/* Manual Entry Form */}
-              <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex flex-col gap-3">
-                <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                   <Plus size={18} className="text-green-600" /> Thêm lịch thi thủ công
-                </h3>
-                <div className="grid grid-cols-2 gap-3">
-                   <div>
-                     <label className="text-[11px] uppercase font-bold text-gray-500 mb-1 block">Thứ</label>
-                     <select value={manualDay} onChange={e => setManualDay(e.target.value)} className="w-full border rounded p-1.5 text-sm">
-                        {DayOptions.map(d => <option key={d}>{d}</option>)}
-                     </select>
-                   </div>
-                   <div>
-                     <label className="text-[11px] uppercase font-bold text-gray-500 mb-1 block">Ngày (VD: 08/05/2026)</label>
-                     <input type="text" value={manualDate} onChange={e => setManualDate(e.target.value)} className="w-full border rounded p-1.5 text-sm" placeholder="DD/MM/YYYY"/>
-                   </div>
-                   <div>
-                     <label className="text-[11px] uppercase font-bold text-gray-500 mb-1 block">Buổi</label>
-                     <select value={manualSession} onChange={e => setManualSession(e.target.value as any)} className="w-full border rounded p-1.5 text-sm">
-                        <option>Sáng</option>
-                        <option>Chiều</option>
-                     </select>
-                   </div>
-                   <div>
-                     <label className="text-[11px] uppercase font-bold text-gray-500 mb-1 block">Khối</label>
-                     <select value={manualGrade} onChange={e => setManualGrade(e.target.value)} className="w-full border rounded p-1.5 text-sm">
-                        <option value="">Chọn khối</option>
-                        {grades.map(g => <option key={g}>{g}</option>)}
-                     </select>
-                   </div>
-                   <div className="col-span-2">
-                     <label className="text-[11px] uppercase font-bold text-gray-500 mb-1 block">Môn (Gõ hoặc chọn từ danh sách)</label>
-                     <input 
-                       list="subject-options"
-                       value={manualSubject} 
-                       onChange={e => setManualSubject(e.target.value)} 
-                       className="w-full border rounded p-1.5 text-sm"
-                       placeholder="Nhập tên môn..."
-                     />
-                     <datalist id="subject-options">
-                        {subjectColumns.map(s => <option key={s} value={s} />)}
-                     </datalist>
-                   </div>
-                </div>
-                <button 
-                  onClick={handleManualAddSchedule}
-                  className="mt-2 w-full py-2 bg-green-50 text-green-700 border border-green-200 rounded font-bold hover:bg-green-100 transition-colors"
-                >Thêm lịch thi</button>
-              </div>
-
-              {/* Manual Schedule List View */}
-              {examSchedule.length > 0 && (
-                <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col gap-3 flex-1 overflow-hidden">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                       <Calendar size={18} className="text-blue-600" /> Danh sách buổi thi ({examSchedule.length})
-                    </h3>
-                    <button 
-                      onClick={handleClearSchedule}
-                      className="text-[10px] text-red-500 font-bold hover:bg-red-50 px-2 py-1 rounded transition-colors"
-                    >
-                      Xóa tất cả
-                    </button>
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+              <div className="space-y-8">
+                {/* Upload Card */}
+                <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl p-8 flex flex-col items-center justify-center gap-6 text-center border-dashed border-gray-300">
+                  <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center shadow-inner">
+                    <Upload size={32} />
                   </div>
-                  <div className="flex-1 overflow-auto border border-gray-100 rounded">
-                    <table className="w-full text-xs">
-                       <thead className="bg-gray-50 text-gray-500 font-bold sticky top-0 border-b">
-                         <tr>
-                           <th className="px-2 py-2 text-left w-8">STT</th>
-                           <th className="px-2 py-2 text-left">Chi tiết buổi thi</th>
-                           <th className="px-2 py-2 text-right w-24">Thao tác</th>
-                         </tr>
-                       </thead>
-                       <tbody className="divide-y">
-                         {examSchedule.map((s, idx) => (
-                           <tr key={idx} className="hover:bg-gray-50 group">
-                             <td className="px-2 py-2 text-gray-400">{idx + 1}</td>
-                             <td className="px-2 py-2">
-                               <div className="font-bold text-gray-800">Thứ {s.day} ({s.date})</div>
-                               <div className="text-gray-500">{s.session} - Khối {s.grade} - {s.subject}</div>
-                             </td>
-                             <td className="px-2 py-2 text-right">
-                               <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                                 <button onClick={() => handleMoveSchedule(idx, 'up')} disabled={idx === 0} className="p-1 hover:text-blue-600 disabled:opacity-30">
-                                   <Plus size={14} className="rotate-180" />
-                                 </button>
-                                 <button onClick={() => handleMoveSchedule(idx, 'down')} disabled={idx === examSchedule.length - 1} className="p-1 hover:text-blue-600 disabled:opacity-30">
-                                   <Plus size={14} />
-                                 </button>
-                                 <button onClick={() => handleRemoveSchedule(idx)} className="p-1 text-red-500 hover:bg-red-50 rounded">
-                                   <Trash2 size={14} />
-                                 </button>
-                               </div>
-                             </td>
-                           </tr>
-                         ))}
-                       </tbody>
+                  <div>
+                    <h3 className="text-lg font-extrabold text-text-heading mb-2">Tải lên lịch thi</h3>
+                    <p className="text-sm text-text-body opacity-60">Chọn file Excel (.xlsx) chứa các cột: Thứ, Ngày, Buổi, Khối, Môn.</p>
+                  </div>
+                  <input type="file" ref={fileInputRef} onChange={handleScheduleUpload} accept=".xlsx,.xls" className="hidden" />
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center justify-center gap-2 px-8 py-3.5 bg-blue-600 text-white rounded-xl transition-all active:scale-95 font-bold hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200"
+                    disabled={loading}
+                  >
+                    {loading ? 'Đang xử lý...' : 'Chọn file từ máy tính'}
+                  </button>
+                </div>
+
+                {/* Manual Form Card */}
+                <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl p-8">
+                  <h3 className="text-lg font-extrabold text-text-heading mb-6 flex items-center gap-3">
+                    <div className="p-2 bg-green-50 text-green-600 rounded-lg"><Plus size={20} /></div>
+                    Thêm lịch thi thủ công
+                  </h3>
+                  <div className="grid grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <label className="text-xs font-extrabold text-text-body uppercase tracking-widest opacity-60">Thứ</label>
+                      <select value={manualDay} onChange={e => setManualDay(e.target.value)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-green-500 transition-all">
+                        {['2','3','4','5','6','7','CN'].map(d => <option key={d}>{d}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-xs font-extrabold text-text-body uppercase tracking-widest opacity-60">Ngày thi</label>
+                       <input type="text" value={manualDate} onChange={e => setManualDate(e.target.value)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-green-500 transition-all" placeholder="VD: 08/05/2026"/>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-xs font-extrabold text-text-body uppercase tracking-widest opacity-60">Buổi</label>
+                       <select value={manualSession} onChange={e => setManualSession(e.target.value as any)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-green-500 transition-all">
+                          <option>Sáng</option><option>Chiều</option>
+                       </select>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-xs font-extrabold text-text-body uppercase tracking-widest opacity-60">Khối</label>
+                       <select value={manualGrade} onChange={e => setManualGrade(e.target.value)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-green-500 transition-all">
+                          <option value="">Chọn khối</option>
+                          {['6','7','8','9'].map(g => <option key={g}>{g}</option>)}
+                       </select>
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                       <label className="text-xs font-extrabold text-text-body uppercase tracking-widest opacity-60">Môn thi</label>
+                       <input list="subject-options" value={manualSubject} onChange={e => setManualSubject(e.target.value)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-green-500 transition-all" placeholder="Nhập hoặc chọn môn..."/>
+                    </div>
+                  </div>
+                  <button onClick={handleManualAddSchedule} className="w-full mt-8 py-4 bg-green-50 text-green-700 rounded-xl font-extrabold text-sm border border-green-200 hover:bg-green-100 transition-all active:scale-95 uppercase tracking-widest">
+                    Thêm vào danh sách
+                  </button>
+                </div>
+              </div>
+
+              {/* Matrix Card */}
+              <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl overflow-hidden flex flex-col min-h-[600px]">
+                <div className="px-8 py-6 bg-slate-50 border-b border-gray-100 flex justify-between items-center">
+                  <h4 className="text-lg font-extrabold text-text-heading">Ma trận lịch thi</h4>
+                  <button onClick={() => setExamSchedule([])} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Xóa tất cả">
+                    <Trash2 size={20} />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-auto p-8">
+                  <div className="min-w-[500px]">
+                    <div className="text-center mb-10">
+                      <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Lịch thi chính thức</h5>
+                      <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">{schoolInfo.examName || '---'}</h3>
+                      <div className="h-1.5 w-16 bg-[var(--color-primary)] mx-auto mt-4 rounded-full"></div>
+                    </div>
+                    
+                    <table className="w-full border-separate border-spacing-0 border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+                      <thead className="bg-slate-50">
+                        <tr>
+                          <th className="px-4 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-r border-slate-100">Thời gian</th>
+                          <th className="px-4 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-r border-slate-100">Buổi</th>
+                          {['6', '7', '8', '9'].map(g => (
+                            <th key={g} className="px-4 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-100">Khối {g}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {scheduleMatrix.map((dateRow, dateIdx) => (
+                          <React.Fragment key={dateRow.date}>
+                            {dateRow.sessions.map((session, sessIdx) => (
+                              <tr key={session.name} className="group hover:bg-slate-50 transition-colors">
+                                {sessIdx === 0 && (
+                                  <td rowSpan={dateRow.sessions.length} className="px-4 py-6 text-center align-middle border-b border-r border-slate-50 bg-slate-50/20">
+                                    <div className="flex flex-col gap-1">
+                                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Thứ {dateRow.day}</span>
+                                      <span className="text-sm font-black text-[var(--color-primary)]">{dateRow.date}</span>
+                                    </div>
+                                  </td>
+                                )}
+                                <td className={cn(
+                                  "px-4 py-4 text-center font-black text-[10px] uppercase tracking-widest border-b border-r border-slate-50",
+                                  session.name === 'Sáng' ? "text-amber-500" : "text-blue-500"
+                                )}>
+                                  {session.name}
+                                </td>
+                                {['6', '7', '8', '9'].map(g => {
+                                  const subjects = session.grades[g] || [];
+                                  return (
+                                    <td key={g} className="px-3 py-4 border-b border-slate-50 align-middle">
+                                      <div className="flex flex-col gap-1.5">
+                                        {subjects.map((s, si) => (
+                                          <div key={si} className="text-[11px] font-bold text-slate-700 bg-[var(--color-primary-light)]/30 rounded-lg py-1.5 px-2.5 border border-[var(--color-primary-light)]/50 text-center">
+                                            {s}
+                                          </div>
+                                        ))}
+                                        {subjects.length === 0 && <span className="text-slate-200 text-center">-</span>}
+                                      </div>
+                                    </td>
+                                  )
+                                })}
+                              </tr>
+                            ))}
+                          </React.Fragment>
+                        ))}
+                        {examSchedule.length === 0 && (
+                            <tr><td colSpan={6} className="text-center py-24 text-slate-300 font-bold italic">Vui lòng tải hoặc thêm lịch thi...</td></tr>
+                        )}
+                      </tbody>
                     </table>
                   </div>
                 </div>
-              )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: ANONYMIZATION (LÀM PHÁCH) */}
+        {activeSubTab === 'anonymization' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 h-full flex flex-col">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-6 shrink-0">
+              <div>
+                <h2 className="text-2xl font-black text-text-heading mb-1 uppercase tracking-tight">Tổ Làm phách</h2>
+                <p className="text-sm text-text-body opacity-60">Thành viên tổ làm phách sẽ được miễn toàn bộ lịch coi thi.</p>
+              </div>
+              <span className="px-4 py-2 bg-purple-50 text-purple-700 rounded-2xl text-xs font-black uppercase shadow-sm border border-purple-100">
+                {anonymizationTeam.length} Giáo viên
+              </span>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm h-full flex flex-col min-h-[500px]">
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center shrink-0">
-                <h4 className="font-bold text-gray-700">Lịch thi hệ thống ({examSchedule.length})</h4>
-                <button onClick={() => setExamSchedule([])} className="text-red-500 hover:text-red-700">
-                  <Trash2 size={18} />
-                </button>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 min-h-0">
+              {/* Left Column: Selection */}
+              <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl flex flex-col min-h-0 overflow-hidden">
+                <div className="p-6 border-b border-gray-50 bg-slate-50/30">
+                  <h3 className="text-sm font-black text-text-heading mb-4 uppercase tracking-wider flex items-center gap-2">
+                    <Search size={16} className="text-primary" /> Chọn thành viên
+                  </h3>
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input 
+                      type="text" placeholder="Tìm tên giáo viên..." 
+                      value={anonymizationSearch} onChange={e => setAnonymizationSearch(e.target.value)}
+                      className="w-full bg-white border border-gray-100 rounded-xl pl-12 pr-4 py-3.5 text-sm font-bold focus:ring-4 focus:ring-primary/5 transition-all outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="flex-1 overflow-auto p-4 space-y-1 custom-scrollbar">
+                  {teachers
+                    .filter(t => t.toLowerCase().includes(anonymizationSearch.toLowerCase()) && !anonymizationTeam.includes(t))
+                    .map(t => (
+                      <div 
+                        key={t} onClick={() => toggleTeamMember(t)}
+                        className="group flex items-center justify-between px-5 py-4 rounded-xl cursor-pointer transition-all hover:bg-slate-50 border border-transparent hover:border-gray-100"
+                      >
+                        <span className="font-bold text-sm text-text-body group-hover:text-primary transition-colors">{t}</span>
+                        <div className="w-8 h-8 bg-gray-50 text-gray-400 rounded-lg flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                          <Plus size={16} />
+                        </div>
+                      </div>
+                    ))
+                  }
+                </div>
               </div>
-              <div className="flex-1 overflow-auto bg-slate-50 p-4">
-                <div className="bg-white rounded shadow-md border border-slate-300 p-6 min-w-[700px] mx-auto">
-                  <div className="text-center mb-6">
-                    <h5 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-1">Lịch thi chính thức</h5>
-                    <h3 className="text-xl font-black text-slate-800 uppercase tabular-nums">{schoolInfo.examName}</h3>
-                    <div className="h-1 w-20 bg-indigo-600 mx-auto mt-2 rounded-full"></div>
-                  </div>
-                  
-                  <table className="w-full border-collapse border border-slate-300">
-                    <thead className="bg-slate-100 table-fixed">
-                      <tr>
-                        <th className="border border-slate-300 px-3 py-3 text-[11px] font-black text-slate-700 uppercase w-[120px]">Ngày tháng</th>
-                        <th className="border border-slate-300 px-3 py-3 text-[11px] font-black text-slate-700 uppercase w-[80px]">Buổi</th>
-                        {['6', '7', '8', '9'].map(g => (
-                          <th key={g} className="border border-slate-300 px-3 py-3 text-[11px] font-black text-slate-700 uppercase">Khối {g}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {scheduleMatrix.map((dateRow, dateIdx) => (
-                        <React.Fragment key={dateRow.date}>
-                          {dateRow.sessions.map((session, sessIdx) => (
-                            <tr key={session.name} className="hover:bg-slate-50/50 transition-colors">
-                              {sessIdx === 0 && (
-                                <td 
-                                  rowSpan={dateRow.sessions.length} 
-                                  className="border border-slate-300 px-3 py-4 text-center align-middle bg-slate-50/30"
-                                >
-                                  <div className="flex flex-col">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase">Thứ {dateRow.day || ''}</span>
-                                    <span className="text-sm font-bold text-indigo-700 tabular-nums">{dateRow.date}</span>
-                                  </div>
-                                </td>
-                              )}
-                              <td className={cn(
-                                "border border-slate-300 px-2 py-4 text-center font-bold text-[10px] uppercase tracking-wider",
-                                session.name === 'Sáng' ? "text-amber-600 bg-amber-50/20" : "text-blue-600 bg-blue-50/20"
-                              )}>
-                                {session.name}
-                              </td>
-                              {['6', '7', '8', '9'].map(g => {
-                                const subjects = session.grades[g] || [];
-                                return (
-                                  <td key={g} className="border border-slate-300 px-2 py-3 align-middle text-center min-w-[100px]">
-                                    <div className="flex flex-col gap-1">
-                                      {subjects.map((s, si) => (
-                                        <div key={si} className="text-[11px] font-bold text-slate-700 bg-indigo-50/50 rounded py-1 px-1.5 border border-indigo-100/50">
-                                          {s}
-                                        </div>
-                                      ))}
-                                      {subjects.length === 0 && <span className="text-slate-300 font-mono">-</span>}
-                                    </div>
-                                  </td>
-                                )
-                              })}
-                            </tr>
-                          ))}
-                        </React.Fragment>
-                      ))}
-                      {examSchedule.length === 0 && (
-                          <tr><td colSpan={6} className="text-center py-20 text-slate-400 font-medium italic bg-slate-50/10">Vui lòng tải lịch thi hoặc nhập thủ công để xem ma trận...</td></tr>
-                      )}
-                    </tbody>
-                  </table>
-                  
-                  <div className="mt-6 pt-4 border-t border-slate-100 flex justify-between items-end opacity-60 italic text-[10px] text-slate-400">
-                    <div>* Lịch thi có thể thay đổi tùy theo điều kiện thực tế.</div>
-                    <div className="font-bold text-indigo-500 uppercase tracking-widest">{schoolInfo.schoolName}</div>
-                  </div>
+
+              {/* Right Column: Currently Selected */}
+              <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl flex flex-col min-h-0 overflow-hidden">
+                <div className="p-6 border-b border-gray-50 bg-slate-50/30 flex items-center justify-between">
+                  <h3 className="text-sm font-black text-text-heading uppercase tracking-wider flex items-center gap-2">
+                    <div className="p-2 bg-purple-100 text-purple-600 rounded-lg"><LayoutGrid size={16} /></div>
+                    Danh sách đã chọn
+                  </h3>
+                  {anonymizationTeam.length > 0 && (
+                    <button onClick={() => setAnonymizationTeam([])} className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:underline">Xóa hết</button>
+                  )}
+                </div>
+                <div className="flex-1 overflow-auto p-4 space-y-1 custom-scrollbar">
+                  {anonymizationTeam.map((t, idx) => (
+                    <div 
+                      key={t}
+                      className="flex items-center justify-between px-5 py-4 rounded-xl bg-purple-50/50 border border-purple-100/50 group animate-in slide-in-from-right-4 duration-300"
+                      style={{ animationDelay: `${idx * 50}ms` }}
+                    >
+                      <span className="font-bold text-sm text-purple-900">{t}</span>
+                      <button 
+                        onClick={() => toggleTeamMember(t)}
+                        className="w-8 h-8 flex items-center justify-center text-purple-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                  {anonymizationTeam.length === 0 && (
+                    <div className="h-full flex flex-col items-center justify-center text-center opacity-30 gap-4 py-20">
+                      <LayoutGrid size={48} />
+                      <p className="text-sm font-bold uppercase tracking-widest">Chưa có thành viên nào</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {activeSubTab === 'config' && (
-          <div className="flex flex-col gap-4">
-             {/* School Info Config */}
-             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-               <div className="flex items-center gap-2 mb-3">
-                 <Settings className="text-indigo-500" size={20} />
-                 <h3 className="font-bold text-gray-800">Thông tin trường (dùng cho xuất Excel)</h3>
-               </div>
-               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                 <div>
-                   <label className="text-xs text-gray-500 font-medium">Cơ quan chủ quản</label>
-                   <input 
-                     value={schoolInfo.authority} 
-                     onChange={e => setSchoolInfo({ ...schoolInfo, authority: e.target.value })}
-                     className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm mt-0.5 outline-none focus:border-blue-400"
-                     placeholder="UBND PHƯỜNG BÌNH ĐỊNH"
-                   />
-                 </div>
-                 <div>
-                   <label className="text-xs text-gray-500 font-medium">Tên trường</label>
-                   <input 
-                     value={schoolInfo.schoolName} 
-                     onChange={e => setSchoolInfo({ ...schoolInfo, schoolName: e.target.value })}
-                     className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm mt-0.5 outline-none focus:border-blue-400"
-                     placeholder="TRƯỜNG THCS BÌNH ĐỊNH"
-                   />
-                 </div>
-                 <div>
-                   <label className="text-xs text-gray-500 font-medium">Kỳ thi</label>
-                   <input 
-                     value={schoolInfo.examName} 
-                     onChange={e => setSchoolInfo({ ...schoolInfo, examName: e.target.value })}
-                     className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm mt-0.5 outline-none focus:border-blue-400"
-                     placeholder="GIỮA HỌC KỲ II"
-                   />
-                 </div>
-                 <div>
-                   <label className="text-xs text-gray-500 font-medium">Năm học</label>
-                   <input 
-                     value={schoolInfo.schoolYear} 
-                     onChange={e => setSchoolInfo({ ...schoolInfo, schoolYear: e.target.value })}
-                     className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm mt-0.5 outline-none focus:border-blue-400"
-                     placeholder="2025-2026"
-                   />
-                 </div>
-                 <div>
-                   <label className="text-xs text-gray-500 font-medium">Địa danh</label>
-                   <input 
-                     value={schoolInfo.location} 
-                     onChange={e => setSchoolInfo({ ...schoolInfo, location: e.target.value })}
-                     className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm mt-0.5 outline-none focus:border-blue-400"
-                     placeholder="Bình Định"
-                   />
-                 </div>
-                 <div>
-                   <label className="text-xs text-gray-500 font-medium">Hiệu trưởng</label>
-                   <input 
-                     value={schoolInfo.principal} 
-                     onChange={e => setSchoolInfo({ ...schoolInfo, principal: e.target.value })}
-                     className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm mt-0.5 outline-none focus:border-blue-400"
-                     placeholder="Nguyễn Văn A"
-                   />
-                 </div>
-               </div>
-             </div>
+        {/* TAB: SECRETARIAT (TỔ THƯ KÝ) */}
+        {activeSubTab === 'secretariat' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 h-full flex flex-col">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-6 shrink-0">
+              <div>
+                <h2 className="text-2xl font-black text-text-heading mb-1 uppercase tracking-tight">Tổ Thư ký</h2>
+                <p className="text-sm text-text-body opacity-60">Thành viên tổ thư ký sẽ được miễn coi thi và gán ký hiệu TK vào lịch trực.</p>
+              </div>
+              <span className="px-4 py-2 bg-amber-50 text-amber-700 rounded-2xl text-xs font-black uppercase shadow-sm border border-amber-100">
+                {secretariatTeam.length} Giáo viên
+              </span>
+            </div>
 
-             <div className="bg-white p-3 rounded-lg border border-gray-200 flex flex-wrap justify-between items-center shadow-sm gap-3">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="bg-white border border-gray-300 rounded overflow-hidden flex items-center shadow-sm">
-                    <div className="px-3 py-1.5 bg-gray-50 border-r text-[11px] font-bold text-gray-500 uppercase tracking-wider">Số giám thị / phòng</div>
-                    <select 
-                      value={invigilationConfig.invigilatorsPerRoom}
-                      onChange={e => setInvigilationConfig({ ...invigilationConfig, invigilatorsPerRoom: parseInt(e.target.value) })}
-                      className="px-3 py-1.5 text-sm font-bold text-blue-700 outline-none focus:bg-blue-50 transition-colors"
-                    >
-                      <option value="1">1 giám thị / phòng</option>
-                      <option value="2">2 giám thị / phòng</option>
-                    </select>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 min-h-0">
+              {/* Left Column: Selection */}
+              <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl flex flex-col min-h-0 overflow-hidden">
+                <div className="p-6 border-b border-gray-50 bg-slate-50/30">
+                  <h3 className="text-sm font-black text-text-heading mb-4 uppercase tracking-wider flex items-center gap-2">
+                    <Search size={16} className="text-primary" /> Chọn thư ký
+                  </h3>
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input 
+                      type="text" placeholder="Tìm tên giáo viên..." 
+                      value={secretariatSearch} onChange={e => setSecretariatSearch(e.target.value)}
+                      className="w-full bg-white border border-gray-100 rounded-xl pl-12 pr-4 py-3.5 text-sm font-bold focus:ring-4 focus:ring-primary/5 transition-all outline-none"
+                    />
                   </div>
-                  {/* Backup/Restore Config */}
-                  <button 
-                    onClick={() => {
-                      const configData = { teacherConfig, anonymizationTeam, secretariatTeam, schoolInfo };
-                      const blob = new Blob([JSON.stringify(configData, null, 2)], { type: 'application/json' });
-                      const url = URL.createObjectURL(blob);
-                      const link = document.createElement('a');
-                      link.href = url;
-                      link.download = `CauHinh_CoiCham_${new Date().toISOString().slice(0, 10)}.json`;
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                      URL.revokeObjectURL(url);
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded font-medium text-sm border border-indigo-200 transition-colors"
-                  >
-                    <Download size={16} /> Sao lưu cấu hình
-                  </button>
-                  <label className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded font-medium text-sm border border-amber-200 transition-colors cursor-pointer">
-                    <Upload size={16} /> Phục hồi cấu hình
-                    <input 
-                      type="file" accept=".json" className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = (ev) => {
-                          try {
-                            const data = JSON.parse(ev.target?.result as string);
-                            if (data.teacherConfig) setTeacherConfig(data.teacherConfig);
-                            if (data.anonymizationTeam) setAnonymizationTeam(data.anonymizationTeam);
-                            if (data.secretariatTeam) setSecretariatTeam(data.secretariatTeam);
-                            if (data.exemptTeachers) setExemptTeachers(data.exemptTeachers);
-                            if (data.secretariatPairs) setSecretariatPairs(data.secretariatPairs);
-                            if (data.schoolInfo) setSchoolInfo(data.schoolInfo);
-                            alert('Phục hồi cấu hình thành công!');
-                          } catch { alert('File không hợp lệ!'); }
-                        };
-                        reader.readAsText(file);
-                        e.target.value = '';
-                      }}
-                    />
-                  </label>
-               </div>
-               <div className="flex items-center gap-3">
-                 <button onClick={handleSaveConfigToServer} disabled={loading} className="flex items-center gap-2 bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50">
-                   <Save size={18}/> {loading ? 'Đang lưu...' : 'Lưu lên hệ thống'}
-                 </button>
-                 <button 
-                  onClick={generateAssignments}
-                  className="flex items-center gap-2 py-2 px-4 bg-green-600 text-white rounded font-bold hover:bg-green-700 shadow-md transition-all active:scale-95 disabled:opacity-50"
-                  disabled={loading || examSchedule.length === 0}
-                >
-                  <Play size={18} /> TẠO BẢNG PHÂN CÔNG
-                </button>
-               </div>
-             </div>
-
-            {/* === ROW 1: GV - Môn dạy (2 columns) === */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Left: Config - Chọn GV cho Môn */}
-                <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col h-[480px]">
-                <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                        <Briefcase className="text-blue-600" size={20} />
-                        <h3 className="font-bold text-gray-800">Cấu hình GV → Môn dạy</h3>
-                    </div>
-                    <button 
-                      onClick={() => {
-                        const ws = XLSX.utils.json_to_sheet(teacherConfig.map(c => ({ 'Môn': c.subject, 'Khối': c.grade || 'Tất cả', 'Giáo viên': c.teachers.join(', ') })));
-                        const wb = XLSX.utils.book_new();
-                        XLSX.utils.book_append_sheet(wb, ws, "CauHinhMon");
-                        XLSX.writeFile(wb, "CauHinhGiaoVienMon.xlsx");
-                      }}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Xuất Excel"
-                    >
-                      <Download size={16} />
-                    </button>
                 </div>
-                <p className="text-xs text-gray-500 mb-3">
-                    Chọn môn & khối, sau đó tick giáo viên giảng dạy. GV dạy môn thi sẽ được miễn coi để chấm bài buổi kế tiếp.
-                </p>
-                <div className="flex gap-2 mb-2 shrink-0">
-                    <select 
-                    value={selectedConfigSubject}
-                    onChange={e => setSelectedConfigSubject(e.target.value)}
-                    className="flex-1 border border-gray-300 rounded px-2 py-1.5 text-sm font-medium"
-                    >
-                        <option value="">-- Chọn Môn --</option>
-                        {subjectColumns.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                    <select 
-                    value={selectedConfigGrade}
-                    onChange={e => setSelectedConfigGrade(e.target.value)}
-                    className="w-32 border border-gray-300 rounded px-2 py-1.5 text-sm font-medium"
-                    >
-                        <option value="">Tất cả khối</option>
-                        {grades.map(g => <option key={g} value={g}>Khối {g}</option>)}
-                    </select>
-                </div>
-                
-                <div className="relative mb-2 shrink-0">
-                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                    <input 
-                    type="text" placeholder="Tìm giáo viên..." 
-                    value={teacherConfigSearch} onChange={e => setTeacherConfigSearch(e.target.value)}
-                    className="w-full border border-gray-300 rounded pl-7 pr-3 py-1.5 text-sm"
-                    />
-                </div>
-
-                {selectedConfigSubject ? (
-                    <div className="flex-1 overflow-auto border border-gray-100 rounded">
-                        <div className="bg-gray-50 text-[10px] uppercase text-gray-500 font-bold px-3 py-1.5 sticky top-0 border-b border-gray-200">
-                            {selectedConfigSubject} {selectedConfigGrade ? `(Khối ${selectedConfigGrade})` : '(Tất cả)'}
+                <div className="flex-1 overflow-auto p-4 space-y-1 custom-scrollbar">
+                  {teachers
+                    .filter(t => t.toLowerCase().includes(secretariatSearch.toLowerCase()) && !secretariatTeam.includes(t))
+                    .map(t => (
+                      <div 
+                        key={t} onClick={() => toggleSecretariatMember(t)}
+                        className="group flex items-center justify-between px-5 py-4 rounded-xl cursor-pointer transition-all hover:bg-slate-50 border border-transparent hover:border-gray-100"
+                      >
+                        <span className="font-bold text-sm text-text-body group-hover:text-primary transition-colors">{t}</span>
+                        <div className="w-8 h-8 bg-gray-50 text-gray-400 rounded-lg flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                          <Plus size={16} />
                         </div>
-                        {teachers.filter(t => t.toLowerCase().includes(teacherConfigSearch.toLowerCase())).map(t => {
-                            const isActive = activeSubjectTeachers.includes(t);
-                            return (
-                            <div 
-                                key={t} 
-                                onClick={() => handleTeacherSubjectToggle(t)}
-                                className={cn(
-                                "flex items-center justify-between px-3 py-1.5 border-b last:border-0 cursor-pointer transition-colors",
-                                isActive ? "bg-blue-50" : "hover:bg-gray-50"
-                                )}
-                            >
-                                <span className={cn("text-sm", isActive ? "font-bold text-blue-700" : "text-gray-700")}>{t}</span>
-                                {isActive ? <CheckCircle2 className="text-blue-600" size={16} /> : <div className="w-[16px] border-gray-300 border rounded-sm h-[16px]" />}
-                            </div>
-                            )
-                        })}
-                    </div>
-                ) : (
-                    <div className="flex-1 flex items-center justify-center border border-gray-100 rounded bg-gray-50">
-                        <p className="text-gray-400 text-sm">Chọn môn để bắt đầu cấu hình</p>
-                    </div>
-                )}
-                </div>
-
-                {/* Right: View - Danh sách GV đã cấu hình */}
-                <div className="bg-white p-4 rounded-lg border border-blue-100 shadow-sm flex flex-col h-[480px]">
-                <div className="flex items-center gap-2 mb-3">
-                    <Search className="text-blue-500" size={20} />
-                    <h3 className="font-bold text-gray-800">Theo dõi GV - Môn dạy</h3>
-                </div>
-                <p className="text-xs text-gray-400 mb-3">Tổng hợp tất cả GV đã cấu hình theo từng Môn/Khối.</p>
-                <div className="flex-1 overflow-auto border border-gray-100 rounded">
-                  {teacherConfig.length === 0 ? (
-                    <div className="flex items-center justify-center h-full text-gray-400 text-sm">Chưa có cấu hình nào</div>
-                  ) : (
-                    teacherConfig
-                      .filter(cfg => {
-                        const matchesSubject = !selectedConfigSubject || cfg.subject === selectedConfigSubject;
-                        const matchesGrade = !selectedConfigGrade || cfg.grade === selectedConfigGrade;
-                        return matchesSubject && matchesGrade;
-                      })
-                      .map((cfg, idx) => (
-                      <div key={idx} className="border-b last:border-0">
-                        <div className="bg-blue-50 text-[10px] uppercase text-blue-600 font-bold px-3 py-1.5 flex justify-between items-center sticky top-0">
-                          <span>{cfg.subject} {cfg.grade ? `- Khối ${cfg.grade}` : '(Tất cả khối)'}</span>
-                          <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full text-[9px]">{cfg.teachers.length} GV</span>
-                        </div>
-                        {cfg.teachers.map(t => (
-                          <div key={t} className="px-3 py-1.5 text-sm text-gray-700 border-b border-gray-50 last:border-0 flex items-center gap-1.5">
-                            <CheckCircle2 className="text-blue-400" size={14} /> {t}
-                          </div>
-                        ))}
                       </div>
                     ))
+                  }
+                </div>
+              </div>
+
+              {/* Right Column: Currently Selected & Pairs */}
+              <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl flex flex-col min-h-0 overflow-hidden">
+                <div className="p-6 border-b border-gray-50 bg-slate-50/30 flex items-center justify-between">
+                  <h3 className="text-sm font-black text-text-heading uppercase tracking-wider flex items-center gap-2">
+                    <div className="p-2 bg-amber-100 text-amber-600 rounded-lg"><Users size={16} /></div>
+                    Danh sách đã chọn
+                  </h3>
+                  {secretariatTeam.length > 0 && (
+                    <button onClick={() => setSecretariatTeam([])} className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:underline">Xóa hết</button>
                   )}
                 </div>
-                </div>
-            </div>
-
-            {/* === ROW 2: Tổ làm phách (2 columns) === */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Left: Config - Chọn GV làm phách */}
-                <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col h-[420px]">
-                <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                        <Users className="text-purple-600" size={20} />
-                        <h3 className="font-bold text-gray-800">Tổ làm phách</h3>
-                    </div>
-                    <button 
-                      onClick={() => {
-                        const ws = XLSX.utils.json_to_sheet(anonymizationTeam.map((t, idx) => ({ 'TT': idx + 1, 'Họ tên': t })));
-                        const wb = XLSX.utils.book_new();
-                        XLSX.utils.book_append_sheet(wb, ws, "LamPhach");
-                        XLSX.writeFile(wb, "DanhSachToLamPhach.xlsx");
-                      }}
-                      className="p-1.5 text-purple-600 hover:bg-purple-50 rounded transition-colors" title="Xuất Excel"
+                <div className="flex-1 overflow-auto p-4 space-y-1 custom-scrollbar">
+                  {secretariatTeam.map((t, idx) => (
+                    <div 
+                      key={t}
+                      className="flex items-center justify-between px-5 py-4 rounded-xl bg-amber-50/50 border border-amber-100/50 group animate-in slide-in-from-right-4 duration-300"
+                      style={{ animationDelay: `${idx * 50}ms` }}
                     >
-                      <Download size={16} />
-                    </button>
-                </div>
-                <p className="text-xs text-gray-500 mb-3">
-                    GV trong tổ phách sẽ <strong>không coi thi</strong> trong toàn bộ kì thi để tập trung làm phách.
-                </p>
-                <div className="relative mb-2 shrink-0">
-                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                    <input 
-                    type="text" placeholder="Tìm giáo viên..." 
-                    value={anonymizationSearch} onChange={e => setAnonymizationSearch(e.target.value)}
-                    className="w-full border border-gray-300 rounded pl-7 pr-3 py-1.5 text-sm"
-                    />
-                </div>
-                <div className="flex-1 overflow-auto border border-gray-100 rounded">
-                    <div className="bg-gray-50 text-[10px] uppercase text-gray-500 font-bold px-3 py-1.5 sticky top-0 border-b border-gray-200 flex justify-between">
-                        <span>Tất cả giáo viên</span>
-                        <span className="text-purple-600 font-bold">{anonymizationTeam.length} đã chọn</span>
+                      <span className="font-bold text-sm text-amber-900">{t}</span>
+                      <button 
+                        onClick={() => toggleSecretariatMember(t)}
+                        className="w-8 h-8 flex items-center justify-center text-amber-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
-                    {teachers.filter(t => t.toLowerCase().includes(anonymizationSearch.toLowerCase())).map(t => {
-                        const isTeam = anonymizationTeam.includes(t);
-                        return (
-                        <div 
-                            key={t} 
-                            onClick={() => toggleTeamMember(t)}
-                            className={cn(
-                            "flex items-center justify-between px-3 py-1.5 border-b last:border-0 cursor-pointer transition-colors",
-                            isTeam ? "bg-purple-50" : "hover:bg-gray-50"
-                            )}
-                        >
-                            <span className={cn("text-sm", isTeam ? "font-bold text-purple-700" : "text-gray-700")}>{t}</span>
-                            {isTeam ? <CheckCircle2 className="text-purple-600" size={16} /> : <div className="w-[16px] border-gray-300 border rounded-full h-[16px]" />}
-                        </div>
-                        )
-                    })}
-                </div>
-                </div>
+                  ))}
+                  {secretariatTeam.length === 0 && (
+                    <div className="h-full flex flex-col items-center justify-center text-center opacity-30 gap-4 py-20">
+                      <Users size={48} />
+                      <p className="text-sm font-bold uppercase tracking-widest">Chưa có thành viên nào</p>
+                    </div>
+                  )}
 
-                {/* Right: View - Danh sách tổ phách đã chọn */}
-                <div className="bg-white p-4 rounded-lg border border-purple-100 shadow-sm flex flex-col h-[420px]">
-                <div className="flex items-center gap-2 mb-3">
-                    <Users className="text-purple-500" size={20} />
-                    <h3 className="font-bold text-gray-800">Danh sách Tổ Phách ({anonymizationTeam.length} GV)</h3>
-                </div>
-                <p className="text-xs text-gray-400 mb-3">
-                    Các giáo viên được miễn coi thi, chuyên trách làm phách.
-                </p>
-                <div className="flex-1 overflow-auto border border-gray-100 rounded">
-                  {anonymizationTeam.length === 0 ? (
-                    <div className="flex items-center justify-center h-full text-gray-400 text-sm">Chưa chọn giáo viên nào</div>
-                  ) : (
-                    anonymizationTeam.map((t, idx) => (
-                      <div key={t} className="flex items-center gap-2 px-3 py-2 border-b last:border-0 hover:bg-purple-50 transition-colors">
-                        <span className="text-xs text-purple-400 font-bold w-6 text-right">{idx + 1}.</span>
-                        <CheckCircle2 className="text-purple-500" size={14} />
-                        <span className="text-sm font-medium text-gray-800">{t}</span>
+                  {/* Pairs Section Integration */}
+                  {secretariatTeam.length > 0 && (
+                    <div className="mt-8 mx-2 p-6 bg-slate-50 rounded-2xl border border-gray-100">
+                      <div className="flex items-center justify-between mb-6">
+                        <div>
+                          <h4 className="text-sm font-black text-text-heading uppercase tracking-widest">Ghép cặp trực ({secretariatPairs.length})</h4>
+                          <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">Chọn 2 người để tạo 1 cặp trực</p>
+                        </div>
+                        {secretariatPairs.length > 0 && (
+                          <button onClick={() => setSecretariatPairs([])} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-all"><Trash2 size={14} /></button>
+                        )}
                       </div>
-                    ))
-                  )}
-                </div>
-                </div>
-            </div>
-
-            {/* === ROW 3: Tổ thư ký (2 columns) === */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Left: Config - Chọn GV thư ký */}
-                <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col h-[420px]">
-                <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                        <User className="text-amber-600" size={20} />
-                        <h3 className="font-bold text-gray-800">Tổ thư ký</h3>
-                    </div>
-                    <button 
-                      onClick={() => {
-                        const ws = XLSX.utils.json_to_sheet(secretariatTeam.map((t, idx) => ({ 'TT': idx + 1, 'Họ tên': t })));
-                        const wb = XLSX.utils.book_new();
-                        XLSX.utils.book_append_sheet(wb, ws, "ThuKy");
-                        XLSX.writeFile(wb, "DanhSachToThuKy.xlsx");
-                      }}
-                      className="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition-colors" title="Xuất Excel"
-                    >
-                      <Download size={16} />
-                    </button>
-                </div>
-                <p className="text-xs text-gray-500 mb-3">
-                    GV thư ký sẽ <strong>không coi thi</strong>. Ký hiệu "TK" trên bảng phân công.
-                </p>
-                <div className="relative mb-2 shrink-0">
-                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                    <input 
-                    type="text" placeholder="Tìm giáo viên..." 
-                    value={secretariatSearch} onChange={e => setSecretariatSearch(e.target.value)}
-                    className="w-full border border-gray-300 rounded pl-7 pr-3 py-1.5 text-sm"
-                    />
-                </div>
-                <div className="flex-1 overflow-auto border border-gray-100 rounded">
-                    <div className="bg-gray-50 text-[10px] uppercase text-gray-500 font-bold px-3 py-1.5 sticky top-0 border-b border-gray-200 flex justify-between">
-                        <span>Tất cả giáo viên</span>
-                        <span className="text-amber-600 font-bold">{secretariatTeam.length} đã chọn</span>
-                    </div>
-                    {teachers.filter(t => t.toLowerCase().includes(secretariatSearch.toLowerCase())).map(t => {
-                        const isTeam = secretariatTeam.includes(t);
-                        return (
-                        <div 
-                            key={t} 
-                            onClick={() => toggleSecretariatMember(t)}
+                      
+                      <div className="flex flex-wrap gap-2 mb-6">
+                        {secretariatTeam.filter(t => !secretariatPairs.some(p => p[0] === t || p[1] === t)).map(t => (
+                          <button 
+                            key={t} onClick={() => togglePairSelection(t)}
                             className={cn(
-                            "flex items-center justify-between px-3 py-1.5 border-b last:border-0 cursor-pointer transition-colors",
-                            isTeam ? "bg-amber-50" : "hover:bg-gray-50"
+                              "px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all border shadow-sm",
+                              pairingSelection.includes(t) 
+                                ? "bg-amber-600 border-amber-600 text-white shadow-amber-200 animate-pulse" 
+                                : "bg-white border-gray-200 text-text-body hover:border-amber-400 hover:shadow-md"
                             )}
-                        >
-                            <span className={cn("text-sm", isTeam ? "font-bold text-amber-700" : "text-gray-700")}>{t}</span>
-                            {isTeam ? <CheckCircle2 className="text-amber-600" size={16} /> : <div className="w-[16px] border-gray-300 border rounded-full h-[16px]" />}
-                        </div>
-                        )
-                    })}
-                </div>
-                </div>
-
-                {/* Right: View - Danh sách thư ký & Ghép cặp */}
-                <div className="bg-white p-4 rounded-lg border border-amber-100 shadow-sm flex flex-col h-[420px]">
-                <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                        <User className="text-amber-500" size={20} />
-                        <h3 className="font-bold text-gray-800">Cặp Thư ký ({secretariatPairs.length})</h3>
-                    </div>
-                    <button 
-                      onClick={() => setSecretariatPairs([])}
-                      className="text-[10px] text-red-500 font-bold hover:underline"
-                    >
-                      Xóa tất cả cặp
-                    </button>
-                </div>
-                <p className="text-[10px] text-amber-600 mb-2 font-medium bg-amber-50 p-1.5 rounded">
-                  Cách ghép cặp: Sau khi chọn tổ thư ký bên trái, nhấn vào 2 tên bất kì trong danh sách dưới đây để tạo thành 1 cặp trực cùng nhau.
-                </p>
-                <div className="flex-1 overflow-auto border border-gray-100 rounded">
-                  {secretariatTeam.length === 0 ? (
-                    <div className="flex items-center justify-center h-full text-gray-400 text-sm">Chưa chọn giáo viên thư ký nào</div>
-                  ) : (
-                    <div className="p-2 flex flex-col gap-2">
-                      {/* Current Pairs */}
-                      {secretariatPairs.map((pair, pIdx) => (
-                        <div key={pIdx} className="bg-amber-50 border border-amber-200 rounded p-2 flex justify-between items-center">
-                          <div className="flex items-center gap-2 flex-1">
-                             <div className="bg-amber-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full shrink-0">{pIdx+1}</div>
-                             <div className="text-xs font-bold text-amber-900 truncate">{pair[0]} & {pair[1]}</div>
-                          </div>
-                          <button onClick={() => setSecretariatPairs(secretariatPairs.filter((_, idx) => idx !== pIdx))} className="text-red-400 hover:text-red-600 ml-2">
-                             <Trash2 size={14} />
+                          >
+                            {t}
                           </button>
-                        </div>
-                      ))}
-                      {/* Unpaired Members */}
-                      <div className="mt-2 border-t pt-2">
-                        <p className="text-[10px] font-bold text-gray-400 mb-1 uppercase">GV Thư ký chưa ghép cặp:</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {secretariatTeam.filter(t => !secretariatPairs.some(p => p[0] === t || p[1] === t)).map(t => (
-                            <button 
-                              key={t}
-                              onClick={() => togglePairSelection(t)}
-                              className={cn(
-                                "px-2 py-1 rounded text-xs border transition-all",
-                                pairingSelection.includes(t) ? "bg-amber-600 border-amber-600 text-white shadow-md animate-pulse" : "bg-white border-gray-200 text-gray-700 hover:border-amber-400"
-                              )}
-                            >
-                              {t}
-                            </button>
-                          ))}
-                        </div>
+                        ))}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {secretariatPairs.map((p, idx) => (
+                          <div key={idx} className="flex items-center justify-between bg-white px-4 py-3 rounded-xl border border-amber-100 shadow-sm animate-in zoom-in duration-300">
+                            <div className="flex items-center gap-2">
+                              <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                              <span className="text-xs font-black text-amber-900 tracking-tight">{p[0]} + {p[1]}</span>
+                            </div>
+                            <button onClick={() => setSecretariatPairs(secretariatPairs.filter((_, i) => i !== idx))} className="p-1.5 text-amber-200 hover:text-rose-500 transition-colors"><X size={12} /></button>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
                 </div>
-                </div>
+              </div>
             </div>
-
-            {/* === ROW 4: Miễn tham gia (2 columns) === */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-                <div className="bg-white p-4 rounded-lg border border-red-100 shadow-sm flex flex-col h-[400px]">
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                            <AlertCircle className="text-red-600" size={20} />
-                            <h3 className="font-bold text-gray-800">Giáo viên Miễn tham gia</h3>
-                        </div>
-                    </div>
-                    <p className="text-xs text-gray-500 mb-3">Những giáo viên này sẽ không được phân bất kỳ nhiệm vụ nào (Coi, Chấm, Thư ký, Phách).</p>
-                    <div className="relative mb-2 shrink-0">
-                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                        <input 
-                            type="text" placeholder="Tìm giáo viên..." 
-                            value={exemptSearch} onChange={e => setExemptSearch(e.target.value)}
-                            className="w-full border border-gray-300 rounded pl-7 pr-3 py-1.5 text-sm"
-                        />
-                    </div>
-                    <div className="flex-1 overflow-auto border border-gray-100 rounded">
-                        {teachers.filter(t => t.toLowerCase().includes(exemptSearch.toLowerCase())).map(t => {
-                            const isExempt = exemptTeachers.includes(t);
-                            return (
-                                <div key={t} onClick={() => toggleExemptMember(t)} className={cn("flex items-center justify-between px-3 py-1.5 border-b last:border-0 cursor-pointer", isExempt ? "bg-red-50" : "hover:bg-gray-50")}>
-                                    <span className={cn("text-sm", isExempt ? "font-bold text-red-700" : "text-gray-700")}>{t}</span>
-                                    {isExempt ? <CheckCircle2 className="text-red-500" size={16} /> : <div className="w-[16px] border-gray-300 border rounded-full h-[16px]" />}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-                <div className="bg-white p-4 rounded-lg border border-red-50 shadow-sm flex flex-col h-[400px]">
-                    <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-red-400" /> Danh sách Miễn ({exemptTeachers.length})
-                    </h3>
-                    <div className="flex-1 overflow-auto border border-gray-100 rounded bg-gray-50/30 p-2">
-                        {exemptTeachers.length === 0 ? <p className="text-center text-gray-400 text-sm mt-10">Chưa chọn giáo viên nào</p> : 
-                            exemptTeachers.map(t => <span key={t} className="inline-block bg-white border border-red-200 text-red-700 text-xs px-2 py-1 rounded m-1 shadow-sm">{t}</span>)
-                        }
-                    </div>
-                </div>
-
-                {/* Card: Môn chấm tập trung */}
-                <div className="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm flex flex-col h-[480px]">
-                    <div className="flex items-center gap-2 mb-3">
-                        <FileText className="text-indigo-600" size={20} />
-                        <h3 className="font-bold text-gray-800">Môn chấm tập trung</h3>
-                    </div>
-                    <p className="text-xs text-gray-500 mb-3">
-                        Tick chọn các môn sẽ được chấm tập trung tại trường. Chỉ các môn này mới được gán "CB" (miễn coi thi buổi sau).
-                    </p>
-                    <div className="flex-1 overflow-auto border border-gray-100 rounded">
-                        <div className="bg-gray-50 text-[10px] uppercase text-gray-500 font-bold px-3 py-1.5 sticky top-0 border-b border-gray-200 flex justify-between">
-                            <span>Tất cả môn</span>
-                            <span className="text-indigo-600 font-bold">{markingSubjects.length} đã chọn</span>
-                        </div>
-                        {subjectColumns.map(s => {
-                            const isMarking = markingSubjects.includes(s);
-                            return (
-                                <div 
-                                    key={s} 
-                                    onClick={() => {
-                                        if (isMarking) setMarkingSubjects(markingSubjects.filter(sub => sub !== s));
-                                        else setMarkingSubjects([...markingSubjects, s]);
-                                    }}
-                                    className={cn(
-                                        "flex items-center justify-between px-3 py-1.5 border-b last:border-0 cursor-pointer transition-colors",
-                                        isMarking ? "bg-indigo-50" : "hover:bg-gray-50"
-                                    )}
-                                >
-                                    <span className={cn("text-sm", isMarking ? "font-bold text-indigo-700" : "text-gray-700")}>{s}</span>
-                                    {isMarking ? <CheckCircle2 className="text-indigo-600" size={16} /> : <div className="w-[16px] border-gray-300 border rounded-sm h-[16px]" />}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-
           </div>
         )}
 
-        {activeSubTab === 'assignment' && (
-          <div className="flex flex-col gap-4">
-            <div className="flex justify-between items-center">
-              <h3 className="font-bold text-lg text-gray-800">Ma trận phân công coi thi</h3>
-              <div className="flex gap-2">
+
+        {/* TAB: EXPERTS */}
+        {/* TAB: EXPERTS (CHUYÊN MÔN) */}
+        {activeSubTab === 'experts' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 h-full flex flex-col">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-6 shrink-0">
+              <div>
+                <h2 className="text-2xl font-black text-text-heading mb-1 uppercase tracking-tight">Chuyên môn & Chấm thi</h2>
+                <p className="text-sm text-text-body opacity-60">Gán giáo viên vào bộ môn để hệ thống tự động miễn coi thi buổi kế tiếp khi môn đó thi.</p>
+              </div>
+            </div>
+
+            {/* Selection Controls */}
+            <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 grid grid-cols-1 md:grid-cols-2 gap-4 shrink-0">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Môn học</label>
+                <select 
+                  value={selectedConfigSubject} onChange={e => setSelectedConfigSubject(e.target.value)}
+                  className="w-full bg-slate-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:bg-white focus:border-blue-500 transition-all shadow-sm"
+                >
+                  <option value="">-- Chọn Môn học --</option>
+                  {subjectColumns.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Khối lớp (Tùy chọn)</label>
+                <select 
+                  value={selectedConfigGrade} onChange={e => setSelectedConfigGrade(e.target.value)}
+                  className="w-full bg-slate-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:bg-white focus:border-blue-500 transition-all shadow-sm"
+                >
+                  <option value="">-- Tất cả khối --</option>
+                  {['6','7','8','9'].map(g => <option key={g} value={g}>Khối {g}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 min-h-0">
+              {/* Left Column: Selection */}
+              <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl flex flex-col min-h-0 overflow-hidden">
+                <div className="p-6 border-b border-gray-50 bg-slate-50/30">
+                  <h3 className="text-sm font-black text-text-heading mb-4 uppercase tracking-wider flex items-center gap-2">
+                    <Search size={16} className="text-primary" /> Danh sách chờ
+                  </h3>
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input 
+                      type="text" placeholder="Tìm giáo viên..." 
+                      value={teacherConfigSearch} onChange={e => setTeacherConfigSearch(e.target.value)}
+                      className="w-full bg-white border border-gray-100 rounded-xl pl-12 pr-4 py-3.5 text-sm font-bold focus:ring-4 focus:ring-primary/5 transition-all outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="flex-1 overflow-auto p-4 space-y-1 custom-scrollbar">
+                  {!selectedConfigSubject ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center opacity-30 gap-4 py-20 px-10">
+                      <Briefcase size={48} />
+                      <p className="text-sm font-bold uppercase tracking-widest">Vui lòng chọn môn học trước</p>
+                    </div>
+                  ) : (
+                    teachers
+                      .filter(t => t.toLowerCase().includes(teacherConfigSearch.toLowerCase()) && !activeSubjectTeachers.includes(t))
+                      .map(t => (
+                        <div 
+                          key={t} onClick={() => handleTeacherSubjectToggle(t)}
+                          className="group flex items-center justify-between px-5 py-4 rounded-xl cursor-pointer transition-all hover:bg-slate-50 border border-transparent hover:border-gray-100"
+                        >
+                          <span className="font-bold text-sm text-text-body group-hover:text-primary transition-colors">{t}</span>
+                          <div className="w-8 h-8 bg-gray-50 text-gray-400 rounded-lg flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                            <Plus size={16} />
+                          </div>
+                        </div>
+                      ))
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column: Currently Assigned */}
+              <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl flex flex-col min-h-0 overflow-hidden">
+                <div className="p-6 border-b border-gray-50 bg-slate-50/30 flex items-center justify-between">
+                  <h3 className="text-sm font-black text-text-heading uppercase tracking-wider flex items-center gap-2">
+                    <div className="p-2 bg-blue-100 text-blue-600 rounded-lg"><Briefcase size={16} /></div>
+                    Đã phân công chuyên môn
+                  </h3>
+                  <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-tighter">
+                    {activeSubjectTeachers.length} GV
+                  </span>
+                </div>
+                <div className="flex-1 overflow-auto p-4 space-y-1 custom-scrollbar">
+                  {activeSubjectTeachers.map((t, idx) => (
+                    <div 
+                      key={idx}
+                      className="flex items-center justify-between px-5 py-4 rounded-xl bg-blue-50/50 border border-blue-100/50 group animate-in slide-in-from-right-4 duration-300"
+                      style={{ animationDelay: `${idx * 40}ms` }}
+                    >
+                      <span className="font-bold text-sm text-blue-900">{t}</span>
+                      <button 
+                        onClick={() => handleTeacherSubjectToggle(t)}
+                        className="w-8 h-8 flex items-center justify-center text-blue-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                  {activeSubjectTeachers.length === 0 && (
+                    <div className="h-full flex flex-col items-center justify-center text-center opacity-30 gap-4 py-20 px-10">
+                      <BookOpen size={48} />
+                      <p className="text-sm font-bold uppercase tracking-widest">Chưa có giáo viên chuyên môn</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        {/* TAB: EXEMPT */}
+        {activeSubTab === 'exempt' && (
+          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+             <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl p-12 flex flex-col items-center max-w-4xl mx-auto">
+                <div className="w-20 h-20 bg-red-100 text-red-500 rounded-3xl flex items-center justify-center mb-8 shadow-inner">
+                   <UserMinus size={40} />
+                </div>
+                <h2 className="text-2xl font-black text-text-heading mb-3 text-center">Danh sách Giáo viên Miễn nhiệm vụ</h2>
+                <p className="text-sm text-text-body opacity-60 text-center max-w-md mb-12">Những người được tick trong danh sách này sẽ không được gán bất kỳ nhiệm vụ nào trong kỳ thi này.</p>
+                
+                <div className="w-full flex gap-10">
+                   <div className="flex-1 flex flex-col h-[500px]">
+                      <div className="relative mb-6">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <input 
+                          type="text" placeholder="Tìm kiếm giáo viên..." 
+                          value={exemptSearch} onChange={e => setExemptSearch(e.target.value)}
+                          className="w-full bg-slate-50 border border-gray-100 rounded-xl pl-12 pr-4 py-4 text-sm font-bold focus:bg-white focus:border-red-500 transition-all outline-none shadow-sm"
+                        />
+                      </div>
+                      <div className="flex-1 overflow-auto pr-4 custom-scrollbar space-y-1">
+                        {teachers.filter(t => t.toLowerCase().includes(exemptSearch.toLowerCase())).map(t => {
+                          const isExempt = exemptTeachers.includes(t);
+                          return (
+                            <div 
+                              key={t} onClick={() => toggleExemptMember(t)}
+                              className={cn(
+                                "group flex items-center justify-between px-6 py-4 rounded-2xl cursor-pointer transition-all",
+                                isExempt ? "bg-red-50 text-red-700" : "hover:bg-slate-50 text-text-body"
+                              )}
+                            >
+                              <span className="font-bold text-sm">{t}</span>
+                              {isExempt ? <CheckCircle2 className="text-red-600" size={24} /> : <div className="w-6 h-6 border-2 border-gray-200 rounded-full group-hover:border-red-300 transition-colors" />}
+                            </div>
+                          )
+                        })}
+                      </div>
+                   </div>
+                   
+                   <div className="w-[320px] bg-slate-50 border border-gray-100 rounded-3xl p-8 flex flex-col border-dashed">
+                      <div className="flex items-center justify-between mb-8">
+                         <h4 className="text-xs font-black text-text-heading uppercase tracking-widest">Đã miễn ({exemptTeachers.length})</h4>
+                         <button onClick={() => setExemptTeachers([])} className="text-xs font-bold text-red-500 hover:underline">Hủy tất cả</button>
+                      </div>
+                      <div className="flex-1 overflow-auto flex flex-wrap gap-2 content-start">
+                         {exemptTeachers.map(t => (
+                           <span key={t} className="bg-white border border-red-100 text-red-700 text-[11px] font-bold px-3 py-1.5 rounded-lg shadow-sm">{t}</span>
+                         ))}
+                         {exemptTeachers.length === 0 && <div className="w-full h-full flex items-center justify-center text-gray-300 italic text-sm">Trống</div>}
+                      </div>
+                   </div>
+                </div>
+             </div>
+          </div>
+        )}
+
+        {/* TAB: SETTINGS */}
+        {activeSubTab === 'settings' && (
+          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
+            <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl p-10">
+               <div className="flex items-center gap-4 mb-10">
+                  <div className="p-4 bg-slate-100 text-slate-700 rounded-2xl shadow-inner"><Settings size={28} /></div>
+                  <div>
+                    <h2 className="text-2xl font-black text-text-heading">Thiết lập chung Hội đồng</h2>
+                    <p className="text-sm text-text-body opacity-60">Các thông số cốt lõi để vận hành hệ thống Coi & Chấm thi.</p>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                 {/* Basic Info Group */}
+                 <div className="space-y-6">
+                    <h4 className="text-[10px] font-black text-[var(--color-primary)] uppercase tracking-[0.3em] mb-4">Thông tin hành chính</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-extrabold text-text-body opacity-60">Cơ quan chủ quản</label>
+                        <input value={schoolInfo.authority} onChange={e => setSchoolInfo({...schoolInfo, authority: e.target.value})} className="w-full bg-slate-50 border border-gray-100 rounded-xl px-4 py-3.5 text-sm font-bold focus:bg-white focus:border-[var(--color-primary)] transition-all outline-none" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-extrabold text-text-body opacity-60">Tên đơn vị (Trường)</label>
+                        <input value={schoolInfo.schoolName} onChange={e => setSchoolInfo({...schoolInfo, schoolName: e.target.value})} className="w-full bg-slate-50 border border-gray-100 rounded-xl px-4 py-3.5 text-sm font-bold focus:bg-white focus:border-[var(--color-primary)] transition-all outline-none" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-extrabold text-text-body opacity-60">Tên Kỳ kiểm tra</label>
+                        <input value={schoolInfo.examName} onChange={e => setSchoolInfo({...schoolInfo, examName: e.target.value})} className="w-full bg-slate-50 border border-gray-100 rounded-xl px-4 py-3.5 text-sm font-bold focus:bg-white focus:border-[var(--color-primary)] transition-all outline-none" />
+                      </div>
+                    </div>
+                 </div>
+
+                 {/* Advanced Rules Group */}
+                 <div className="space-y-6">
+                    <h4 className="text-[10px] font-black text-[var(--color-primary)] uppercase tracking-[0.3em] mb-4">Quy tắc & Nhân sự</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-extrabold text-text-body opacity-60">Định mức Giám thị</label>
+                        <select 
+                          value={invigilationConfig.invigilatorsPerRoom}
+                          onChange={e => setInvigilationConfig({ ...invigilationConfig, invigilatorsPerRoom: parseInt(e.target.value) })}
+                          className="w-full bg-slate-50 border border-gray-100 rounded-xl px-4 py-3.5 text-sm font-black text-blue-600 focus:bg-white focus:border-[var(--color-primary)] transition-all outline-none appearance-none"
+                        >
+                          <option value="1">01 Giám thị / phòng</option>
+                          <option value="2">02 Giám thị / phòng (Khuyên dùng)</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-extrabold text-text-body opacity-60">Năm học</label>
+                        <input value={schoolInfo.schoolYear} onChange={e => setSchoolInfo({...schoolInfo, schoolYear: e.target.value})} className="w-full bg-slate-50 border border-gray-100 rounded-xl px-4 py-3.5 text-sm font-bold focus:bg-white focus:border-[var(--color-primary)] transition-all outline-none" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-extrabold text-text-body opacity-60">Hiệu trưởng</label>
+                        <input value={schoolInfo.principal} onChange={e => setSchoolInfo({...schoolInfo, principal: e.target.value})} className="w-full bg-slate-50 border border-gray-100 rounded-xl px-4 py-3.5 text-sm font-bold focus:bg-white focus:border-[var(--color-primary)] transition-all outline-none" />
+                      </div>
+                    </div>
+                 </div>
+               </div>
+
+               <div className="mt-16 pt-10 border-t border-gray-100 flex items-center justify-between">
+                  <div className="flex gap-4">
+                    <button 
+                      onClick={() => {
+                        const data = { teacherConfig, anonymizationTeam, secretariatTeam, schoolInfo, invigilationConfig, markingSubjects, exemptTeachers };
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `Full_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+                        link.click();
+                      }}
+                      className="flex items-center gap-2 px-6 py-4 bg-slate-50 text-text-heading border border-gray-200 rounded-2xl font-bold text-sm hover:bg-slate-100 transition-all shadow-sm"
+                    >
+                      <Download size={20} /> Sao lưu toàn bộ
+                    </button>
+                  </div>
+                  
+                  <button 
+                    onClick={generateAssignments}
+                    disabled={loading || examSchedule.length === 0}
+                    className="flex items-center gap-3 px-10 py-5 bg-[var(--color-primary)] text-white rounded-2xl font-black text-sm hover:bg-[var(--color-primary-hover)] shadow-2xl shadow-indigo-200 transition-all active:scale-95 disabled:opacity-50 uppercase tracking-widest"
+                  >
+                    <Play size={20} /> Bắt đầu Phân công Tự động
+                  </button>
+               </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: MATRIX (RESULTS) */}
+        {activeSubTab === 'matrix' && (
+          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-8">
+              <div>
+                <h2 className="text-3xl font-black text-text-heading mb-2">Bảng tổng hợp Phân công</h2>
+                <p className="text-sm text-text-body opacity-60">Tổng cộng {invigilationAssignments.length} giáo viên tham gia hội đồng.</p>
+              </div>
+              <div className="flex gap-4">
                 <button 
                   onClick={handleExportMarkingSchedule}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md hover:bg-indigo-100 transition-colors font-medium text-sm shadow-sm"
+                  className="flex items-center gap-2.5 px-6 py-4 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-2xl font-bold text-sm hover:bg-indigo-100 transition-all shadow-sm"
                 >
-                  <FileText size={18} /> Lịch chấm thi
+                  <FileText size={20} /> Xuất Lịch Chấm
                 </button>
                 <button 
                   onClick={handleExportExcel}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors font-medium text-sm shadow-sm"
+                  className="flex items-center gap-2.5 px-6 py-4 bg-blue-50 text-blue-700 border border-blue-100 rounded-2xl font-bold text-sm hover:bg-blue-100 transition-all shadow-sm"
                 >
-                  <Download size={18} /> Phân công Coi
+                  <Download size={20} /> Xuất Bảng Coi
                 </button>
                 <button 
-                  onClick={() => setInvigilationAssignments([])}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-md hover:bg-red-100 transition-colors font-medium text-sm shadow-sm"
+                  onClick={() => { if(window.confirm('Xóa sạch kết quả?')) setInvigilationAssignments([]) }}
+                  className="p-4 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 transition-all"
                 >
-                  <Trash2 size={18} /> Xóa sạch
+                  <Trash2 size={24} />
                 </button>
               </div>
             </div>
 
-            {/* Matrix Overview */}
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm flex flex-col flex-1 max-h-[500px]">
-              <div className="overflow-auto flex-1">
-                <table className="w-full text-[11px] border-collapse min-w-[max-content]">
-                  <thead className="bg-gray-100 text-gray-500 font-bold sticky top-0 z-10">
-                    <tr className="border-b border-gray-200">
-                      <th className="px-3 py-3 text-left border-r sticky left-0 bg-gray-100 z-20 w-[40px]" rowSpan={2}>TT</th>
-                      <th className="px-3 py-3 text-left border-r sticky left-[40px] bg-gray-100 z-20 w-[180px]" rowSpan={2}>Họ và tên GV</th>
-                      {(Array.from(new Set(sortedSessionKeys.map(k => k.split('|')[0]))) as string[]).map((date) => {
-                         const colsForDate = sortedSessionKeys.filter(k => k.split('|')[0] === date).length;
+            {/* The Big Matrix Table */}
+            <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-[32px] overflow-hidden flex flex-col">
+              <div className="overflow-auto custom-scrollbar max-h-[700px]">
+                <table className="w-full text-xs border-separate border-spacing-0">
+                  <thead className="bg-slate-50 sticky top-0 z-20">
+                    <tr>
+                      <th className="px-6 py-5 text-left border-b border-r border-slate-100 font-black text-slate-400 uppercase tracking-widest sticky left-0 bg-slate-50 z-30" rowSpan={2}>TT</th>
+                      <th className="px-6 py-5 text-left border-b border-r border-slate-100 font-black text-slate-400 uppercase tracking-widest sticky left-14 bg-slate-50 z-30 min-w-[200px]" rowSpan={2}>Họ và tên</th>
+                      {uniqueDates.map(date => {
+                         const cols = sortedSessionKeys.filter(k => k.split('|')[0] === date).length;
                          const sInfo = examSchedule.find(s => s.date === date);
                          return (
-                            <th key={date} className="px-2 py-2 text-center border-r border-b" colSpan={colsForDate}>
-                                {sInfo?.day || ''} ({date})
+                            <th key={date} className="px-4 py-3 text-center border-b border-r border-slate-100 font-black text-slate-700 text-[10px] uppercase tracking-widest bg-slate-100/50" colSpan={cols}>
+                                {sInfo?.day ? 'T' + sInfo.day : ''} ({date})
                             </th>
                          )
                       })}
-                      <th className="px-3 py-3 text-center z-10" rowSpan={2}>SỐ BUỔI</th>
+                      <th className="px-6 py-5 text-center border-b border-slate-100 font-black text-[var(--color-primary)] uppercase tracking-widest bg-[var(--color-primary-light)]/20" rowSpan={2}>Tổng</th>
                     </tr>
-                    <tr className="border-b border-gray-200">
-                      {sortedSessionKeys.map((sk: string) => (
-                        <th key={sk} className="px-2 py-1 text-center border-r min-w-[90px]">
-                           {sk.split('|')[1]}
-                        </th>
-                      ))}
+                    <tr>
+                       {sortedSessionKeys.map(sk => (
+                          <th key={sk} className="px-3 py-4 text-center border-b border-r border-slate-100 font-black text-[10px] text-slate-500 uppercase tracking-tighter bg-slate-50/80">
+                             {sk.split('|')[1]}
+                          </th>
+                       ))}
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="bg-white">
                     {invigilationAssignments.map((a: any, i: number) => (
-                      <tr key={i} className="border-b last:border-0 hover:bg-gray-50 transition-colors">
-                        <td className="px-3 py-1.5 text-gray-400 border-r sticky left-0 bg-white z-0">{i + 1}</td>
-                        <td className="px-3 py-1.5 font-medium text-gray-900 border-r sticky left-[40px] bg-white z-0 text-xs">{a.teacherName}</td>
-                        {sortedSessionKeys.map((sk: string) => {
-                           const val = (a.sessions as any)?.[sk];
-                           const room = (a.roomAssignments as any)?.[sk];
-                           return (
-                             <td key={sk} className={cn(
-                               "px-1 py-1.5 text-center border-r text-[10px]",
-                               val === 'X' ? "text-blue-700 font-bold" : 
-                               val === 'CB' ? "text-orange-500 italic bg-orange-50" : 
-                               val === 'TK' ? "text-amber-600 font-bold bg-amber-50" : ""
-                             )}>
-                               {val === 'X' && room ? room : val === 'CB' ? 'CB' : val === 'TK' ? 'TK' : ''}
-                             </td>
-                           )
+                      <tr key={i} className="group hover:bg-indigo-50/30 transition-colors">
+                        <td className="px-6 py-4 text-slate-400 font-bold border-b border-r border-slate-50 sticky left-0 bg-white group-hover:bg-indigo-50/30 font-mono text-[10px]">{(i+1).toString().padStart(2,'0')}</td>
+                        <td className="px-6 py-4 font-black text-slate-800 border-b border-r border-slate-50 sticky left-14 bg-white group-hover:bg-indigo-50/30 text-sm whitespace-nowrap">{a.teacherName}</td>
+                        {sortedSessionKeys.map(sk => {
+                          const val = a.sessions[sk];
+                          const room = a.roomAssignments?.[sk];
+                          return (
+                            <td key={sk} className={cn(
+                              "px-2 py-4 text-center border-b border-r border-slate-50 text-[10px] font-black leading-tight",
+                              val === 'X' ? "bg-blue-50/30 text-blue-700" : 
+                              val === 'CB' ? "bg-orange-50/50 text-orange-600 italic" : 
+                              val === 'TK' ? "bg-amber-50 text-amber-600" : ""
+                            )}>
+                              {val === 'X' ? (
+                                <div className="flex flex-col gap-0.5">
+                                   <span className="text-blue-400 text-[8px] uppercase">{val}</span>
+                                   <span className="truncate max-w-[80px]">{room}</span>
+                                </div>
+                              ) : val}
+                            </td>
+                          )
                         })}
-                        <td className="px-3 py-1.5 font-bold text-center text-blue-800">{a.total}</td>
+                        <td className="px-6 py-4 font-black text-center text-blue-800 bg-slate-50/30 border-b border-slate-50 text-sm">{a.total}</td>
                       </tr>
                     ))}
-                    {invigilationAssignments.length === 0 && (
-                      <tr>
-                        <td colSpan={sortedSessionKeys.length + 3} className="px-4 py-20 text-center text-gray-400 italic">
-                          <div className="flex flex-col items-center gap-2">
-                            <AlertCircle size={48} />
-                            <p className="text-lg">Chưa có dữ liệu phân công.</p>
-                            <p className="text-sm">Hãy cấu hình lịch thi và nhấn "TẠO BẢNG PHÂN CÔNG" ở tab Cấu hình.</p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
                   </tbody>
                 </table>
               </div>
             </div>
 
-            {/* Detailed Per-Session Room Assignment */}
-            {invigilationAssignments.length > 0 && (
-              <div>
-                <h3 className="font-bold text-lg text-gray-800 mb-3">Chi tiết phân công theo buổi</h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {sortedSessionKeys.map((sk: string) => {
-                    const [date, session] = sk.split('|');
-                    const sInfo = examSchedule.find(s => s.date === date);
-                    const sessionExams = examSchedule.filter(s => s.date === date && s.session === session);
-                    const subjects = sessionExams.map(e => `${e.subject} (K${e.grade})`).join(', ');
-                    
-                    // Get teachers assigned to this session with rooms
-                    const assigned = invigilationAssignments
-                      .filter((a: any) => a.sessions[sk] === 'X' && a.roomAssignments?.[sk])
-                      .map((a: any) => ({ name: a.teacherName, room: a.roomAssignments[sk] }))
-                      .sort((a: any, b: any) => a.room.localeCompare(b.room));
-                    
-                    // Get CB teachers
-                    const cbTeachers = invigilationAssignments
-                      .filter((a: any) => a.sessions[sk] === 'CB')
-                      .map((a: any) => a.teacherName);
-
-                    return (
-                      <div key={sk} className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-                        <div className={cn(
-                          "px-4 py-2 font-bold text-sm flex justify-between items-center",
-                          session === 'Sáng' ? "bg-amber-50 text-amber-800 border-b border-amber-200" : "bg-blue-50 text-blue-800 border-b border-blue-200"
-                        )}>
-                          <span>{session} - Thứ {sInfo?.day || ''} ({date})</span>
-                          <span className="text-xs font-normal">{subjects}</span>
-                        </div>
-                        <div className="p-3">
-                          <div className="text-[10px] uppercase text-gray-500 font-bold mb-2 flex justify-between">
-                            <span>Giám thị: {assigned.length} GV</span>
-                            {cbTeachers.length > 0 && <span className="text-orange-500">Chấm bài: {cbTeachers.length} GV</span>}
-                          </div>
-                          <table className="w-full text-sm">
-                            <thead>
-                              <tr className="text-[10px] uppercase text-gray-400 border-b">
-                                <th className="text-left py-1 w-8">TT</th>
-                                <th className="text-left py-1">Phòng</th>
-                                <th className="text-left py-1">Giáo viên coi thi</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {assigned.map((a: any, idx: number) => (
-                                <tr key={idx} className="border-b last:border-0 hover:bg-gray-50">
-                                  <td className="py-1 text-gray-400 text-xs">{idx + 1}</td>
-                                  <td className="py-1 font-medium text-blue-700 text-xs">{a.room}</td>
-                                  <td className="py-1 text-gray-800 text-xs">{a.name}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                          {cbTeachers.length > 0 && (
-                            <div className="mt-2 pt-2 border-t border-gray-100">
-                              <span className="text-[10px] uppercase text-orange-500 font-bold">Chấm bài: </span>
-                              <span className="text-xs text-gray-600">{cbTeachers.join(', ')}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+            {/* Secondary: Session details */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12 pb-12">
+               {sortedSessionKeys.slice(0, 4).map(sk => {
+                  const [date, sess] = sk.split('|');
+                  const assigned = invigilationAssignments.filter((a:any) => a.sessions[sk] === 'X');
+                  return (
+                    <div key={sk} className="bg-white border border-gray-100 shadow-sm rounded-3xl p-8">
+                       <div className="flex items-center justify-between mb-6">
+                         <div className="flex items-center gap-3">
+                           <div className={cn("w-1.5 h-10 rounded-full", sess === 'Sáng' ? "bg-amber-500" : "bg-blue-500")} />
+                           <div>
+                             <h4 className="font-extrabold text-slate-800">{sess} - {date}</h4>
+                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{assigned.length} Giám thị</p>
+                           </div>
+                         </div>
+                       </div>
+                       <div className="grid grid-cols-2 gap-3">
+                          {assigned.map((a:any) => (
+                             <div key={a.teacherName} className="flex items-center justify-between bg-slate-50/50 px-4 py-3 rounded-xl border border-slate-100">
+                                <span className="text-xs font-bold text-slate-700 truncate">{a.teacherName}</span>
+                                <span className="text-[10px] font-black text-slate-400">{a.roomAssignments[sk]}</span>
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                  )
+               })}
+               {sortedSessionKeys.length > 4 && (
+                 <div className="lg:col-span-2 text-center p-10 bg-slate-50 border border-dashed border-slate-200 rounded-3xl text-sm font-bold text-slate-500">
+                    Và còn {sortedSessionKeys.length - 4} buổi thi khác... Hãy xuất Excel để xem đầy đủ chi tiết.
+                 </div>
+               )}
+            </div>
           </div>
         )}
       </div>

@@ -993,7 +993,7 @@ export const TabAssignment: React.FC = () => {
 
         {/* Assignment Form */}
         {/* Action Header */}
-        <div className="border border-gray-200 rounded-lg bg-white p-3 flex flex-col gap-3 shrink-0">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-3 shrink-0 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-gray-100">
             <div className="flex items-center gap-3">
               <span className="text-xs bg-slate-100 text-slate-500 px-3 py-1.5 rounded-full font-bold uppercase tracking-widest border border-slate-200 shadow-inner">
@@ -1006,10 +1006,10 @@ export const TabAssignment: React.FC = () => {
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <button
                 onClick={handleExportTemplate}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-all border border-slate-200"
+                className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 text-gray-700 text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-slate-100 transition-all border border-gray-200"
               >
                 <FileDown size={14} /> Mẫu Toàn bộ
               </button>
@@ -1017,33 +1017,33 @@ export const TabAssignment: React.FC = () => {
           </div>
 
           {/* Assignment Form */}
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="w-24">
-              <label className="block text-[11px] text-gray-500 mb-1 uppercase font-semibold">Khối</label>
+          <div className="flex flex-wrap items-end gap-4 pt-4">
+            <div className="w-28">
+              <label className="block text-[10px] text-gray-500 font-extrabold mb-1.5 uppercase tracking-widest">Khối</label>
               <select
                 value={grade} onChange={e => setGrade(e.target.value)}
-                className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
+                className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
               >
-                <option value="" key="default">-- Chọn --</option>
+                <option value="" key="default">-- Khối --</option>
                 {grades.map(g => <option key={g} value={g}>{g}</option>)}
               </select>
             </div>
-            <div className="w-32">
-              <label className="block text-[11px] text-gray-500 mb-1 uppercase font-semibold">Môn</label>
+            <div className="w-40">
+              <label className="block text-[10px] text-text-body font-extrabold mb-1.5 uppercase tracking-widest opacity-60">Môn</label>
               <select
                 value={subject} onChange={e => setSubject(e.target.value)}
-                className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
+                className="w-full bg-slate-50 border border-border-soft rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
               >
-                <option value="" key="default">-- Chọn --</option>
+                <option value="" key="default">-- Chọn môn --</option>
                 {subjectColumns.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
-            <div className="flex-1 min-w-[150px]">
-              <label className="block text-[11px] text-gray-500 mb-1 uppercase font-semibold">Giáo viên</label>
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-[10px] text-text-body font-extrabold mb-1.5 uppercase tracking-widest opacity-60">Giáo viên</label>
               <input
                 type="text"
                 list="teacher-list"
-                placeholder="🔍 Nhập tên GV..."
+                placeholder="🔍 Nhập tên giáo viên..."
                 value={teacher}
                 onChange={e => setTeacher(e.target.value)}
                 onBlur={e => {
@@ -1051,124 +1051,100 @@ export const TabAssignment: React.FC = () => {
                     setTeacher('');
                   }
                 }}
-                className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
+                className="w-full bg-slate-50 border border-border-soft rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
               />
               <datalist id="teacher-list">
                 {teachers.filter(Boolean).map(t => <option key={`dl-${t}`} value={t} />)}
               </datalist>
             </div>
-            <div className="flex-2 min-w-[200px]">
-              <label className="block text-[11px] text-gray-500 mb-1 uppercase font-semibold">Mã túi (cách nhau dấu phẩy)</label>
+            <div className="flex-2 min-w-[280px]">
+              <label className="block text-[10px] text-text-body font-extrabold mb-1.5 uppercase tracking-widest opacity-60">Mã túi (DKZ, YBK...)</label>
               <input
-                type="text" placeholder="VD: DKZ, YBK,..."
+                type="text" placeholder="Nhập mã túi thi..."
                 value={packages} onChange={e => setPackages(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm"
+                className="w-full bg-slate-50 border border-border-soft rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
               />
             </div>
             <button
               onClick={handleAssign}
               disabled={loading}
-              className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 h-[34px] whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-2 px-8 py-3 bg-[var(--color-primary)] text-white rounded-lg transition-all active:scale-95 font-bold hover:bg-[var(--color-primary-hover)] hover:shadow-lg hover:shadow-indigo-500/20 h-[46px]"
             >
-              {loading ? 'ĐANG XỬ LÝ...' : 'PHÂN CÔNG'}
+              {loading ? 'ĐANG XỬ LÝ' : 'PHÂN CÔNG'}
             </button>
           </div>
         </div>
 
-        {/* Group 3: Results */}
-        <div className="border border-gray-200 rounded-lg bg-white p-4 flex flex-col lg:flex-1 lg:overflow-hidden min-h-[500px] lg:min-h-0">
-          <div className="flex flex-wrap justify-between gap-2 mb-3 items-center shrink-0">
-            <h3 className="font-semibold text-blue-700">Danh sách Phân công</h3>
+        {/* Results Card */}
+        <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl transition-all p-6 flex flex-col flex-1 lg:overflow-hidden min-h-[500px] lg:min-h-0">
+          <div className="flex flex-wrap justify-between gap-4 mb-6 items-center shrink-0">
+            <h3 className="text-lg font-extrabold text-text-heading">Danh sách Phân công</h3>
             <div className="flex flex-wrap gap-2">
-              <button onClick={handleColorize} className="flex items-center gap-1 px-3 py-1.5 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600">
+              <button onClick={handleColorize} className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-indigo-100 transition-all border border-indigo-100">
                 <Palette size={14} /> Tô màu
               </button>
-              <button onClick={handleCheckMissing} className="flex items-center gap-1 px-3 py-1.5 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600">
+              <button onClick={handleCheckMissing} className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-amber-100 transition-all border border-amber-100">
                 <AlertTriangle size={14} /> Kiểm tra sót
               </button>
-              <button onClick={handleExportMissing} className="flex items-center gap-1 px-3 py-1.5 bg-orange-500 text-white text-xs rounded hover:bg-orange-600">
-                <Download size={14} /> Xuất Excel Túi Thiếu
-              </button>
-              <button onClick={handleExportMissingPDF} className="flex items-center gap-1 px-3 py-1.5 bg-red-500 text-white text-xs rounded hover:bg-red-600">
-                <FileText size={14} /> Xuất Phiếu Túi Thiếu
+              <div className="h-8 w-px bg-border-soft mx-1" />
+              <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-accent/10 text-accent-hover text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-accent/20 transition-all border border-accent/20">
+                <Download size={14} /> Xuất Excel
               </button>
               <button
                 onClick={handleDeleteSelected}
                 className={cn(
-                  "flex items-center gap-1 px-3 py-1.5 text-white text-xs rounded transition-colors",
-                  showConfirmDelete ? "bg-red-700 font-bold ring-2 ring-red-300" : "bg-red-600 hover:bg-red-700"
+                  "flex items-center gap-2 px-4 py-2 text-[11px] font-extrabold uppercase tracking-widest rounded-xl transition-all border",
+                  showConfirmDelete 
+                    ? "bg-rose-600 text-white border-rose-600 shadow-lg shadow-rose-200" 
+                    : "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
                 )}
               >
-                <Trash2 size={14} /> {showConfirmDelete ? "Xác nhận xóa?" : "Xóa chọn"}
-              </button>
-              <div className="flex gap-1 border-l pl-2 border-gray-300">
-                <button
-                  onClick={() => handleBulkStatusChange('Xong')}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-700 text-xs rounded hover:bg-green-200 border border-green-200"
-                >
-                  <CheckCircle2 size={14} /> Chọn Xong
-                </button>
-                <button
-                  onClick={() => handleBulkStatusChange('Chưa')}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-red-100 text-red-700 text-xs rounded hover:bg-red-200 border border-red-200"
-                >
-                  <XCircle size={14} /> Chọn Chưa
-                </button>
-              </div>
-              <button onClick={handleExportExcel} className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-xs rounded hover:bg-green-700">
-                <Download size={14} /> Xuất Excel
+                <Trash2 size={14} /> {showConfirmDelete ? "Chắc chắn?" : "Xóa chọn"}
               </button>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 mb-3 shrink-0">
-            <span className="text-sm font-medium text-gray-700 whitespace-nowrap hidden sm:inline">Lọc:</span>
+          <div className="flex flex-wrap items-center gap-3 mb-6 shrink-0 bg-slate-50 p-4 rounded-xl border border-border-soft">
+            <span className="text-xs font-extrabold text-text-body uppercase tracking-[0.2em] opacity-40 ml-1">Lọc nhanh:</span>
             <select
               value={filterGrade} onChange={e => setFilterGrade(e.target.value)}
-              className="border border-gray-300 rounded px-2 py-1.5 text-sm w-full sm:w-28"
+              className="bg-white border border-border-soft rounded-xl px-4 py-2 text-xs font-bold w-full sm:w-32 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
             >
               <option value="" key="all-grades">Tất cả khối</option>
               {grades.filter(Boolean).map(g => <option key={`filter-g-${g}`} value={g}>{g}</option>)}
             </select>
             <select
               value={filterSubject} onChange={e => setFilterSubject(e.target.value)}
-              className="border border-gray-300 rounded px-2 py-1.5 text-sm w-full sm:w-36"
+              className="bg-white border border-border-soft rounded-xl px-4 py-2 text-xs font-bold w-full sm:w-40 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
             >
               <option value="" key="all-subjects">Tất cả môn</option>
               {subjectColumns.filter(Boolean).map(s => <option key={`filter-s-${s}`} value={s}>{s}</option>)}
             </select>
             <select
               value={filterTeacher} onChange={e => setFilterTeacher(e.target.value)}
-              className="border border-gray-300 rounded px-2 py-1.5 text-sm w-full sm:w-48"
+              className="bg-white border border-border-soft rounded-xl px-4 py-2 text-xs font-bold w-full sm:w-56 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
             >
               <option value="" key="all-teachers">Tất cả giáo viên</option>
               {teachers.filter(Boolean).map(t => <option key={`filter-t-${t}`} value={t}>{t}</option>)}
             </select>
-            <select
-              value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-              className="border border-gray-300 rounded px-2 py-1.5 text-sm w-full sm:w-36"
-            >
-              <option value="" key="all">Tất cả trạng thái</option>
-              <option value="Chưa" key="not-done">Chưa</option>
-              <option value="Xong" key="done">Xong</option>
-            </select>
-            <div className="relative flex-1 min-w-[200px] w-full">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <div className="relative flex-1 min-w-[240px] w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-body/30" size={16} />
               <input
-                type="text" placeholder="Nhập mã túi cần tìm..."
+                type="text" placeholder="Tìm mã túi..."
                 value={packageSearch} onChange={e => setPackageSearch(e.target.value)}
-                className="w-full border border-gray-300 rounded pl-8 pr-3 py-1.5 text-sm"
+                className="w-full bg-white border border-border-soft rounded-xl pl-10 pr-4 py-2 text-xs font-bold focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
               />
             </div>
           </div>
 
-          <div className="flex-1 overflow-auto border border-gray-200 rounded min-h-0">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0 z-10">
+          <div className="flex-1 overflow-auto border border-border-soft rounded-2xl min-h-0 bg-white">
+            <table className="w-full text-sm text-left border-separate border-spacing-0">
+              <thead className="sticky top-0 z-10 bg-white">
                 <tr>
-                  <th className="px-3 py-2 w-10 text-center">
+                  <th className="px-4 py-4 w-12 text-center border-b border-border-soft">
                     <input
                       type="checkbox"
+                      className="rounded-md border-border-soft text-primary focus:ring-primary/20 transition-all font-sans"
                       onChange={(e) => {
                         if (e.target.checked) {
                           setSelectedRows(new Set(filteredAssignmentData.map(getRowKey)));
@@ -1179,14 +1155,12 @@ export const TabAssignment: React.FC = () => {
                       checked={selectedRows.size === filteredAssignmentData.length && filteredAssignmentData.length > 0}
                     />
                   </th>
-                  <th className="px-4 py-2 w-12 text-center">STT</th>
-                  <th className="px-4 py-2">Khối</th>
-                  <th className="px-4 py-2">Môn</th>
-                  <th className="px-4 py-2">Giáo viên</th>
-                  <th className="px-4 py-2">Mã túi</th>
-                  <th className="px-4 py-2">Phòng</th>
-                  <th className="px-4 py-2">Thời gian nhập</th>
-                  <th className="px-4 py-2 text-center">Trạng thái</th>
+                  <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Khối</th>
+                  <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Môn</th>
+                  <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Giáo viên</th>
+                  <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Mã túi</th>
+                  <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Phòng</th>
+                  <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft text-center">Trạng thái</th>
                 </tr>
               </thead>
               <tbody>

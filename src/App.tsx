@@ -10,15 +10,16 @@ import { GasSetupModal } from './components/GasSetupModal';
 import { ConfigEnglishModal } from './components/ConfigEnglishModal';
 import { SplashScreen } from './components/SplashScreen';
 import { ChangePasswordModal } from './components/ChangePasswordModal';
-import { Settings, Wrench, Search, Trash2, User, Lock, LogOut, AlertCircle, Calendar, Download, Upload, LayoutDashboard, RefreshCw, Save, GraduationCap, UserCog, Mic, KeyRound } from 'lucide-react';
+import { 
+  Settings, Wrench, Trash2, LogOut, AlertCircle, Calendar, 
+  Download, Upload, LayoutDashboard, RefreshCw, GraduationCap, 
+  UserCog, Mic, KeyRound, Menu, X, Bell, ChevronRight, User
+} from 'lucide-react';
 import { cn } from './lib/utils';
 import { loadFromGas, saveToGas } from './lib/gas';
 import { downloadJSON, readJSONFile } from './lib/backupUtils';
 
 const MainApp = () => {
-  const [showLogin, setShowLogin] = useState(false);
-  const [adminPassword, setAdminPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
   const [activeTab, setActiveTab] = useState<'assignment' | 'merger' | 'invigilation' | 'speaking_report'>('assignment');
   const [isGasModalOpen, setIsGasModalOpen] = useState(false);
   const [isConfigEnglishModalOpen, setIsConfigEnglishModalOpen] = useState(false);
@@ -31,9 +32,9 @@ const MainApp = () => {
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [restoreFile, setRestoreFile] = useState<File | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
-  const [loginTab, setLoginTab] = useState<'admin' | 'teacher'>('teacher');
-  const [teacherPhone, setTeacherPhone] = useState('');
+  const [loginError, setLoginError] = useState('');
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'saved' | 'error'>('idle');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { 
@@ -57,7 +58,7 @@ const MainApp = () => {
     schoolInfo, setSchoolInfo,
     englishSpeakingAccounts, setEnglishSpeakingAccounts,
     loggedInTeacher, setLoggedInTeacher,
-    loggedInPhone, setLoggedInPhone,
+    setLoggedInPhone,
     teacherList, setTeacherList,
     roomData, setRoomData,
     role, setRole
@@ -91,17 +92,14 @@ const MainApp = () => {
       if (data.teacherList && data.teacherList.length > 0) setTeacherList(data.teacherList);
       if (data.roomData && data.roomData.length > 0) setRoomData(data.roomData);
       
-      // Sync subjectColumns with markingSubjects if empty
       const finalSubjects = (data.subjectColumns && data.subjectColumns.length > 0) 
         ? data.subjectColumns 
         : (data.markingSubjects || []);
       setSubjectColumns(finalSubjects);
 
-      // Update teachers from teacherList
       if (data.teacherList && data.teacherList.length > 0) {
         setTeachers(data.teacherList.map((t: any) => String(t.name).trim()).sort());
       } else {
-        // Fallback or legacy update logic if needed
         const tSet = new Set<string>();
         if (data.originalData) {
           data.originalData.forEach((r: any) => {
@@ -115,7 +113,6 @@ const MainApp = () => {
       }
     } catch (error: any) {
       console.error("Failed to load initial data from GAS:", error);
-      // Don't alert on background refresh if it's just a trigger
       if (showLoading) alert(error.message);
     } finally {
       setIsLoadingInitial(false);
@@ -127,7 +124,6 @@ const MainApp = () => {
     fetchInitialData();
   }, [gasUrl]);
 
-  // AUTO-SYNC LOGIC
   useEffect(() => {
     if (!gasUrl || isLoadingInitial || role !== 'admin') return;
 
@@ -135,30 +131,18 @@ const MainApp = () => {
       setSyncStatus('syncing');
       try {
         await saveToGas(gasUrl, {
-          roomData,
-          teacherList,
-          assignmentData,
-          mergedData,
-          examSchedule,
-          invigilationAssignments,
-          markingSubjects,
-          secretariatPairs,
-          exemptTeachers,
-          invigilationConfig,
-          schoolInfo,
-          teacherConfig,
-          anonymizationTeam,
-          secretariatTeam,
-          englishSpeakingAccounts
+          roomData, teacherList, assignmentData, mergedData, examSchedule, 
+          invigilationAssignments, markingSubjects, secretariatPairs, 
+          exemptTeachers, invigilationConfig, schoolInfo, teacherConfig, 
+          anonymizationTeam, secretariatTeam, englishSpeakingAccounts
         }, 'sync');
         setSyncStatus('saved');
-        // Reset to idle after 3 seconds
         setTimeout(() => setSyncStatus('idle'), 3000);
       } catch (error) {
         console.error("Auto-sync failed:", error);
         setSyncStatus('error');
       }
-    }, 2000); // 2 second debounce
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [
@@ -169,51 +153,30 @@ const MainApp = () => {
   ]);
 
   useEffect(() => {
-    if (refreshTrigger > 0) {
-      fetchInitialData(false);
-    }
+    if (refreshTrigger > 0) fetchInitialData(false);
   }, [refreshTrigger]);
 
-  const handleRefresh = () => {
-    fetchInitialData(false);
-  };
-
-  // === BACKUP: Download all data as JSON ===
   const handleBackup = () => {
     const backupData = {
       version: '1.0',
       exportedAt: new Date().toISOString(),
-      originalData,
-      assignmentData,
-      mergedData,
-      adminAccounts,
-      subjectColumns,
-      teachers,
-      examSchedule,
-      invigilationAssignments,
-      anonymizationTeam,
-      secretariatTeam,
-      exemptTeachers,
-      secretariatPairs,
-      markingSubjects,
-      teacherConfig,
-      invigilationConfig,
-      schoolInfo,
-      englishSpeakingAccounts
+      originalData, assignmentData, mergedData, adminAccounts,
+      subjectColumns, teachers, examSchedule, invigilationAssignments,
+      anonymizationTeam, secretariatTeam, exemptTeachers, secretariatPairs,
+      markingSubjects, teacherConfig, invigilationConfig, schoolInfo,
+      englishSpeakingAccounts, teacherList, roomData
     };
     const now = new Date();
     const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
     downloadJSON(backupData, `QLKT_backup_${dateStr}.json`);
   };
 
-  // === RESTORE: Upload JSON file ===
   const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setRestoreFile(file);
       setShowRestoreModal(true);
     }
-    // Reset input so the same file can be selected again
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -222,13 +185,8 @@ const MainApp = () => {
     setIsRestoring(true);
     try {
       const data = await readJSONFile(restoreFile);
+      if (typeof data !== 'object' || data === null) throw new Error('File backup không hợp lệ.');
 
-      // Validate basic structure
-      if (typeof data !== 'object' || data === null) {
-        throw new Error('File backup không hợp lệ.');
-      }
-
-      // Restore all state
       if (Array.isArray(data.originalData)) setOriginalData(data.originalData);
       if (Array.isArray(data.assignmentData)) setAssignmentData(data.assignmentData);
       if (Array.isArray(data.mergedData)) setMergedData(data.mergedData);
@@ -246,8 +204,9 @@ const MainApp = () => {
       if (data.invigilationConfig) setInvigilationConfig(data.invigilationConfig);
       if (data.schoolInfo) setSchoolInfo(data.schoolInfo);
       if (Array.isArray(data.englishSpeakingAccounts)) setEnglishSpeakingAccounts(data.englishSpeakingAccounts);
+      if (Array.isArray(data.teacherList)) setTeacherList(data.teacherList);
+      if (Array.isArray(data.roomData)) setRoomData(data.roomData);
 
-      // Sync to Google Sheets
       if (gasUrl) {
         try {
           await saveToGas(gasUrl, {
@@ -264,7 +223,9 @@ const MainApp = () => {
             teacherConfig: data.teacherConfig || [],
             invigilationConfig: data.invigilationConfig || { invigilatorsPerRoom: 1 },
             schoolInfo: data.schoolInfo || { authority: '', schoolName: '', principal: '', location: '', examName: '', schoolYear: '' },
-            englishSpeakingAccounts: data.englishSpeakingAccounts || []
+            englishSpeakingAccounts: data.englishSpeakingAccounts || [],
+            teacherList: data.teacherList || [],
+            roomData: data.roomData || []
           });
         } catch (syncErr: any) {
           console.error('Sync to GAS failed after restore:', syncErr);
@@ -284,29 +245,18 @@ const MainApp = () => {
 
   const handleLogin = (type: 'admin' | 'teacher' | 'speaking_teacher', credential: string, username?: string) => {
     setLoginError('');
-    
     if (type === 'admin') {
-      // Admin Login logic
       let isValid = false;
       const pwd = credential.trim();
-      
-      // Filter out empty rows that might come from GAS (rows with only headers or empty strings)
-      const validAccounts = adminAccounts.filter(acc => 
-        Object.values(acc).some(val => val && String(val).trim() !== '')
-      );
-
+      const validAccounts = adminAccounts.filter(acc => Object.values(acc).some(val => val && String(val).trim() !== ''));
       if (validAccounts.length > 0) {
-        isValid = validAccounts.some(acc => {
-          return Object.values(acc).some(val => String(val).trim() === pwd);
-        });
+        isValid = validAccounts.some(acc => Object.values(acc).some(val => String(val).trim() === pwd));
       } else {
         isValid = pwd === 'Admin123';
       }
-
       if (isValid) {
         setRole('admin');
         setActiveTab('assignment');
-        setLoginError('');
       } else {
         setLoginError('Mật khẩu quản trị không chính xác!');
       }
@@ -317,29 +267,23 @@ const MainApp = () => {
       if (account) {
         setRole('speaking_teacher');
         setLoggedInTeacher(account.teacherName);
-        setLoggedInPhone(uname); // store username in phone to reuse it in state
-        setActiveTab('assignment'); // Default tab isn't used for speaking_teacher, but we set it anyway
-        setLoginError('');
+        setLoggedInPhone(uname);
+        setActiveTab('assignment');
       } else {
         setLoginError('Tài khoản hoặc mật khẩu không chính xác!');
       }
     } else {
-      // Teacher Login logic (Phone Number)
       const inputPhone = credential.trim();
       if (!inputPhone) {
         setLoginError('Vui lòng nhập số điện thoại!');
         return;
       }
-
-      // Find teacher by phone in assignmentData or teacherList
       let foundTeacher = '';
       const cleanInput = inputPhone.replace(/\D/g, '');
-      
       const assignment = assignmentData.find(a => {
         const cleanPhone = (a.phone || '').replace(/\D/g, '');
         return cleanPhone === cleanInput && cleanInput !== '';
       });
-
       if (assignment) {
         foundTeacher = assignment.teacher;
       } else {
@@ -349,13 +293,11 @@ const MainApp = () => {
         });
         if (t) foundTeacher = t.name;
       }
-
       if (foundTeacher) {
         setRole('teacher');
         setLoggedInTeacher(foundTeacher);
         setLoggedInPhone(inputPhone);
-        setActiveTab('assignment'); 
-        setLoginError('');
+        setActiveTab('assignment');
       } else {
         setLoginError('Không tìm thấy giáo viên với số điện thoại này trong hệ thống!');
       }
@@ -366,81 +308,38 @@ const MainApp = () => {
     setRole(null);
     setLoggedInTeacher(null);
     setLoggedInPhone(null);
-    setAdminPassword('');
-    setTeacherPhone('');
     setLoginError('');
-    setShowLogin(true);
   };
 
   const handleResetData = async () => {
     let isValid = false;
     if (adminAccounts && adminAccounts.length > 0) {
-      isValid = adminAccounts.some(acc => 
-        Object.values(acc).some(val => String(val).trim() === resetPassword)
-      );
+      isValid = adminAccounts.some(acc => Object.values(acc).some(val => String(val).trim() === resetPassword));
     } else {
       isValid = resetPassword === 'Admin123';
     }
-
     if (!isValid) {
       alert('Mật khẩu không chính xác!');
       return;
     }
-    
     setIsResetting(true);
     try {
       if (gasUrl) {
         await saveToGas(gasUrl, { 
-          originalData: [], 
-          assignmentData: [], 
-          mergedData: [],
-          examSchedule: [],
-          invigilationAssignments: [],
-          anonymizationTeam: [],
-          secretariatTeam: [],
-          exemptTeachers: [],
-          secretariatPairs: [],
-          markingSubjects: [],
-          teacherList: [],
-          roomData: [],
-          teacherConfig: [],
+          originalData: [], assignmentData: [], mergedData: [], examSchedule: [],
+          invigilationAssignments: [], anonymizationTeam: [], secretariatTeam: [],
+          exemptTeachers: [], secretariatPairs: [], markingSubjects: [],
+          teacherList: [], roomData: [], teacherConfig: [],
           invigilationConfig: { invigilatorsPerRoom: 1 },
-          schoolInfo: {
-            authority: '',
-            schoolName: '',
-            principal: '',
-            location: '',
-            examName: '',
-            schoolYear: ''
-          }
+          schoolInfo: { authority: '', schoolName: '', principal: '', location: '', examName: '', schoolYear: '' }
         });
       }
-      setOriginalData([]);
-      setAssignmentData([]);
-      setMergedData([]);
-      setSubjectColumns([]);
-      setTeachers([]);
-      setExamSchedule([]);
-      setInvigilationAssignments([]);
-      setAnonymizationTeam([]);
-      setSecretariatTeam([]);
-      setExemptTeachers([]);
-      setSecretariatPairs([]);
-      setMarkingSubjects([]);
-      setTeacherList([]);
-      setRoomData([]);
-      setTeacherConfig([]);
-      setSchoolInfo({
-        authority: '',
-        schoolName: '',
-        principal: '',
-        location: '',
-        examName: '',
-        schoolYear: ''
-      });
-      setCurrentFile('');
-      setShowResetModal(false);
-      setResetPassword('');
+      setOriginalData([]); setAssignmentData([]); setMergedData([]); setSubjectColumns([]);
+      setTeachers([]); setExamSchedule([]); setInvigilationAssignments([]); setAnonymizationTeam([]);
+      setSecretariatTeam([]); setExemptTeachers([]); setSecretariatPairs([]); setMarkingSubjects([]);
+      setTeacherList([]); setRoomData([]); setTeacherConfig([]);
+      setSchoolInfo({ authority: '', schoolName: '', principal: '', location: '', examName: '', schoolYear: '' });
+      setCurrentFile(''); setShowResetModal(false); setResetPassword('');
       alert('Đã xóa toàn bộ dữ liệu thành công!');
     } catch (error: any) {
       alert('Lỗi khi xóa dữ liệu: ' + error.message);
@@ -460,212 +359,206 @@ const MainApp = () => {
     );
   }
 
+  const navItems = [
+    { id: 'assignment', label: 'Phân công chấm', icon: Wrench, roles: ['admin', 'teacher'] },
+    { id: 'merger', label: 'Ghép phách', icon: LayoutDashboard, roles: ['admin'] },
+    { id: 'invigilation', label: 'Coi thi & Chấm thi', icon: Calendar, roles: ['admin'] },
+    { id: 'speaking_report', label: 'Điểm Nói', icon: Mic, roles: ['admin'] },
+  ];
+
   return (
-    <div className="h-screen bg-slate-50 flex flex-col font-sans overflow-hidden">
-      {/* Premium Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm px-3 md:px-6 py-2 md:py-3 flex items-center justify-between shrink-0 z-50">
-        <div className="flex items-center gap-2 md:gap-4">
-          <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-600/20">
-            <GraduationCap size={20} className="md:w-6 md:h-6" />
+    <div className="h-screen bg-bg-main flex overflow-hidden font-manrope">
+      {/* Mobile Backdrop */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[45] lg:hidden animate-in fade-in duration-300"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Snov.io Inspired Sidebar */}
+      <aside className={cn(
+        "bg-white border-r border-border-soft flex flex-col transition-all duration-300 z-50 shrink-0",
+        "fixed inset-y-0 left-0 lg:relative",
+        isSidebarOpen ? "w-[280px] translate-x-0" : "w-[280px] -translate-x-full lg:w-[80px] lg:translate-x-0"
+      )}>
+        <div className="p-6 flex items-center gap-3">
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 shrink-0">
+            <GraduationCap size={24} />
           </div>
-          <div className="hidden md:block">
-            <h1 className="text-xl font-black text-gray-900 leading-tight uppercase tracking-tight">
-              Tiện ích quản lý kỳ thi
-            </h1>
-            <p className="text-[10px] text-blue-600 font-bold tracking-[0.2em] uppercase opacity-80">
-              {schoolInfo.schoolName} {schoolInfo.examName ? ` - ${schoolInfo.examName}` : ''}
-            </p>
+          {isSidebarOpen && (
+            <div className="overflow-hidden">
+              <h2 className="font-extrabold text-text-heading whitespace-nowrap leading-tight">QLKT Pro</h2>
+              <p className="text-[10px] text-primary font-bold uppercase tracking-widest">{schoolInfo.schoolName || 'vNedu Tool'}</p>
+            </div>
+          )}
+        </div>
+
+        <nav className="flex-1 px-4 space-y-2 py-4">
+          {navItems.filter(item => item.roles.includes(role || '')).map((item: any) => (
+            <div
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={cn(
+                "flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer font-bold text-sm text-[var(--color-text-body)] hover:bg-slate-50 hover:text-[var(--color-text-heading)]",
+                activeTab === item.id && "bg-[var(--color-primary-light)] text-[var(--color-primary)]",
+                !isSidebarOpen && "justify-center px-0"
+              )}
+              title={item.label}
+            >
+              <item.icon size={20} className="shrink-0" />
+              {isSidebarOpen && <span>{item.label}</span>}
+              {isSidebarOpen && activeTab === item.id && <ChevronRight size={16} className="ml-auto opacity-50" />}
+            </div>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t border-border-soft space-y-2">
+          {role === 'admin' && (
+            <>
+              <div 
+                className={cn("flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer font-bold text-sm text-[var(--color-text-body)] hover:bg-slate-50 hover:text-[var(--color-text-heading)]", !isSidebarOpen && "justify-center px-0")}
+                onClick={() => setIsConfigEnglishModalOpen(true)}
+                title="Cấu hình Tiếng Anh"
+              >
+                <UserCog size={20} />
+                {isSidebarOpen && <span>Cấu hình Tiếng Anh</span>}
+              </div>
+              <div 
+                className={cn("flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer font-bold text-sm text-[var(--color-text-body)] hover:bg-slate-50 hover:text-[var(--color-text-heading)]", !isSidebarOpen && "justify-center px-0")}
+                onClick={() => setIsGasModalOpen(true)}
+                title="Cấu hình Cloud"
+              >
+                <Settings size={20} />
+                {isSidebarOpen && <span>Cấu hình Cloud</span>}
+              </div>
+            </>
+          )}
+          <div 
+            className={cn("snov-sidebar-item text-rose-500 hover:bg-rose-50 hover:text-rose-600", !isSidebarOpen && "justify-center px-0")}
+            onClick={handleLogout}
+            title="Đăng xuất"
+          >
+            <LogOut size={20} />
+            {isSidebarOpen && <span>Đăng xuất</span>}
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
-          {/* Sync Status Indicator */}
+        {/* Toggle Button */}
+        <button 
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="absolute -right-3 top-20 w-6 h-6 bg-white border border-border-soft rounded-full flex items-center justify-center shadow-sm hover:bg-slate-50 transition-colors z-50 text-text-body"
+        >
+          {isSidebarOpen ? <X size={14} /> : <Menu size={14} />}
+        </button>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col min-w-0 h-full relative">
+        {/* Modern Header */}
+        <header className="h-20 bg-white border-b border-border-soft px-4 lg:px-8 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2 lg:gap-4">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden p-2 text-text-body hover:bg-slate-50 rounded-xl transition-colors"
+            >
+              <Menu size={24} />
+            </button>
+            <h1 className="text-xl font-extrabold text-text-heading capitalize">
+              {navItems.find(i => i.id === activeTab)?.label}
+            </h1>
+            {role === 'admin' && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-slate-50 border border-border-soft rounded-full">
+                <div className={cn(
+                  "w-2 h-2 rounded-full",
+                  syncStatus === 'syncing' ? "bg-amber-500 animate-pulse" :
+                  syncStatus === 'saved' ? "bg-accent" :
+                  syncStatus === 'error' ? "bg-rose-500" : "bg-gray-300"
+                )} />
+                <span className="text-[10px] font-bold text-text-body uppercase tracking-wider">
+                  {syncStatus === 'syncing' ? 'Đang lưu...' : 'Cloud Sync'}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <button className="p-2 text-text-body hover:bg-slate-50 rounded-xl transition-colors relative">
+                <Bell size={20} />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
+              </button>
+            </div>
+            
+            <div className="h-8 w-px bg-border-soft" />
+
+            <div className="flex items-center gap-3">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-bold text-text-heading leading-tight">{role === 'admin' ? 'Quản trị viên' : loggedInTeacher}</p>
+                <p className="text-[10px] text-text-body font-medium uppercase tracking-widest">{role}</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl overflow-hidden bg-primary-light flex items-center justify-center text-primary font-black shadow-inner border border-primary/10">
+                <User size={24} />
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Content Container */}
+        <div className="flex-1 overflow-hidden p-8 flex flex-col min-h-0 bg-bg-main">
+          {/* Action Toolbar for Admin */}
           {role === 'admin' && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border border-gray-200 shadow-inner">
-              <div className={cn(
-                "w-2 h-2 rounded-full",
-                syncStatus === 'syncing' ? "bg-amber-500 animate-pulse" :
-                syncStatus === 'saved' ? "bg-emerald-500" :
-                syncStatus === 'error' ? "bg-rose-500" : "bg-gray-300"
-              )} />
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">
-                {syncStatus === 'syncing' ? 'Đang đồng bộ...' :
-                 syncStatus === 'saved' ? 'Đã lưu Cloud' :
-                 syncStatus === 'error' ? 'Lỗi kết nối' : 'Cloud Sync'}
-              </span>
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={handleBackup}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-border-soft rounded-xl text-xs font-bold text-text-body hover:bg-slate-50 transition-all shadow-sm"
+                >
+                  <Download size={14} /> Sao lưu JSON
+                </button>
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-border-soft rounded-xl text-xs font-bold text-text-body hover:bg-slate-50 transition-all shadow-sm"
+                >
+                  <Upload size={14} /> Phục hồi
+                  <input type="file" ref={fileInputRef} onChange={handleFileSelected} accept=".json" className="hidden" />
+                </button>
+              </div>
+
+              <button 
+                onClick={() => setShowResetModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-rose-50 text-rose-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-rose-100 transition-all border border-rose-100/50"
+              >
+                <Trash2 size={14} /> Reset Kỳ Thi
+              </button>
             </div>
           )}
 
-          <div className="hidden lg:flex flex-col items-end">
-            <span className="text-sm font-black text-gray-800 leading-none">
-              {role === 'admin' ? 'QUẢN TRỊ VIÊN' : loggedInTeacher}
-            </span>
-          </div>
-
-          <div className="h-8 w-px bg-gray-200" />
-
-          <div className="flex gap-2">
-            {role === 'speaking_teacher' && (
-              <button
-                onClick={() => setIsChangePasswordModalOpen(true)}
-                className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-all font-black text-[10px] md:text-xs uppercase border border-indigo-100 group"
-              >
-                <KeyRound size={14} className="md:w-4 md:h-4 transition-transform group-hover:rotate-12" />
-                <span className="hidden sm:inline">Đổi mật khẩu</span>
-              </button>
-            )}
-            <button 
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-100 transition-all font-black text-[10px] md:text-xs uppercase border border-rose-100 group"
-            >
-              <LogOut size={14} className="md:w-4 md:h-4 transition-transform group-hover:-translate-x-1" />
-              <span className="hidden sm:inline">Đăng xuất</span>
-              <span className="sm:hidden text-[9px]">Thoát</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex-1 flex flex-col min-h-0 bg-slate-50">
-        {/* Navigation Bar */}
-        <div className="px-6 pt-4 shrink-0 bg-white border-b border-gray-200">
-          <div className="max-w-[1600px] mx-auto flex items-center justify-between">
-            <div className="flex gap-1">
-              {role === 'admin' ? (
-                <>
-                  <button 
-                    onClick={() => setActiveTab('assignment')}
-                    className={cn(
-                      "flex items-center gap-1.5 md:gap-2 px-3 md:px-6 py-3 rounded-t-xl font-black text-[11px] md:text-[13px] uppercase transition-all tracking-wide border-x border-t",
-                      activeTab === 'assignment' 
-                        ? "bg-slate-50 text-blue-600 border-gray-200 shadow-inner" 
-                        : "text-gray-400 hover:text-gray-600 border-transparent"
-                    )}
-                  >
-                    <Wrench size={14} className="md:w-4 md:h-4" /> 
-                    <span className="hidden md:inline">Phân công túi bài</span>
-                    <span className="md:hidden">PC Chấm</span>
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('merger')}
-                    className={cn(
-                      "flex items-center gap-1.5 md:gap-2 px-3 md:px-6 py-3 rounded-t-xl font-black text-[11px] md:text-[13px] uppercase transition-all tracking-wide border-x border-t",
-                      activeTab === 'merger' 
-                        ? "bg-slate-50 text-blue-600 border-gray-200 shadow-inner" 
-                        : "text-gray-400 hover:text-gray-600 border-transparent"
-                    )}
-                  >
-                    <LayoutDashboard size={14} className="md:w-4 md:h-4" /> 
-                    <span className="hidden md:inline">Kết quả ghép phách</span>
-                    <span className="md:hidden">Tra Phách</span>
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('invigilation')}
-                    className={cn(
-                      "flex items-center gap-1.5 md:gap-2 px-3 md:px-6 py-3 rounded-t-xl font-black text-[11px] md:text-[13px] uppercase transition-all tracking-wide border-x border-t",
-                      activeTab === 'invigilation' 
-                        ? "bg-slate-50 text-blue-600 border-gray-200 shadow-inner" 
-                        : "text-gray-400 hover:text-gray-600 border-transparent"
-                    )}
-                  >
-                    <Calendar size={14} className="md:w-4 md:h-4" /> 
-                    <span className="hidden md:inline">Coi thi & Chấm thi</span>
-                    <span className="md:hidden">Coi & Chấm</span>
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('speaking_report')}
-                    className={cn(
-                      "flex items-center gap-1.5 md:gap-2 px-3 md:px-6 py-3 rounded-t-xl font-black text-[11px] md:text-[13px] uppercase transition-all tracking-wide border-x border-t",
-                      activeTab === 'speaking_report' 
-                        ? "bg-slate-50 text-indigo-600 border-gray-200 shadow-inner" 
-                        : "text-gray-400 hover:text-gray-600 border-transparent"
-                    )}
-                  >
-                    <Mic size={14} className="md:w-4 md:h-4" /> 
-                    <span className="hidden md:inline">Tiến độ Điểm Nói</span>
-                    <span className="md:hidden">Điểm Nói</span>
-                  </button>
-                </>
-              ) : role === 'teacher' ? (
-                <div className="flex items-center gap-2 py-3">
-                  <span className="font-black text-sm uppercase tracking-widest text-slate-400">Trạng thái:</span>
-                  <span className="font-black text-sm uppercase tracking-widest text-emerald-600">Sẵn sàng phân túi</span>
-                </div>
-              ) : null}
-            </div>
-
-            {role === 'admin' && (
-              <div className="flex items-center gap-2 mb-2">
-                <button
-                  onClick={() => setIsConfigEnglishModalOpen(true)}
-                  className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all border border-transparent hover:border-indigo-100"
-                  title="Cấu hình tài khoản Tiếng Anh"
-                >
-                  <UserCog size={20} />
-                </button>
-                <div className="h-6 w-px bg-gray-200 mx-1" />
-                <button
-                  onClick={() => setIsGasModalOpen(true)}
-                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                  title="Cấu hình Google Apps Script"
-                >
-                  <Settings size={20} />
-                </button>
-                <button
-                  onClick={handleBackup}
-                  className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                  title="Sao lưu toàn bộ dữ liệu (JSON)"
-                >
-                  <Download size={20} />
-                </button>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
-                  title="Phục hồi từ file sao lưu"
-                >
-                  <Upload size={20} />
-                  <input type="file" ref={fileInputRef} onChange={handleFileSelected} accept=".json" className="hidden" />
-                </button>
-                <div className="h-6 w-px bg-gray-200 mx-1" />
-                <button
-                  onClick={() => setShowResetModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-rose-700 shadow-lg shadow-rose-600/20"
-                >
-                  <Trash2 size={14} /> Khởi tạo lại
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Dynamic Viewport */}
-        <div className="flex-1 overflow-hidden p-2 md:p-6 relative">
-          <div className="h-full bg-white rounded-2xl md:rounded-[2rem] border border-gray-200 shadow-xl shadow-slate-200/50 flex flex-col overflow-hidden relative z-10">
+          {/* Dynamic Content Card */}
+          <div className="flex-1 overflow-hidden flex flex-col bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl transition-all overflow-hidden">
             {isLoadingInitial ? (
-              <div className="flex-1 flex flex-col items-center justify-center gap-6 text-gray-400 bg-slate-50/50">
+              <div className="flex-1 flex flex-col items-center justify-center gap-6">
                 <div className="relative">
-                  <div className="w-16 h-16 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
-                  <RefreshCw size={24} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-600" />
+                  <div className="w-16 h-16 border-4 border-primary/10 border-t-primary rounded-full animate-spin"></div>
+                  <RefreshCw size={24} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary" />
                 </div>
                 <div className="text-center">
-                  <p className="text-lg font-black text-gray-800 uppercase tracking-widest">Đang tải dữ liệu Cloud</p>
-                  <p className="text-xs font-medium uppercase tracking-widest opacity-60 mt-1">Vui lòng chờ trong giây lát...</p>
+                  <p className="text-lg font-black text-text-heading uppercase tracking-widest">Đang tải dữ liệu Cloud</p>
+                  <p className="text-xs font-medium uppercase tracking-widest text-text-body mt-1">Vui lòng chờ...</p>
                 </div>
               </div>
             ) : (
-              <div className="flex-1 overflow-hidden flex flex-col">
+              <div className="flex-1 overflow-hidden flex flex-col p-6">
                 {role === 'speaking_teacher' ? (
                   <TabSpeakingGrade />
                 ) : role === 'teacher' ? (
                   <TabTeacher />
                 ) : (
-                  <div className="flex-1 min-h-0 bg-slate-50 relative p-4 overflow-hidden">
-                    <div className="h-full max-w-7xl mx-auto w-full">
-                      {activeTab === 'assignment' && <TabAssignment />}
-                      {activeTab === 'merger' && <TabMerger />}
-                      {activeTab === 'invigilation' && <TabInvigilation />}
-                      {activeTab === 'speaking_report' && <TabSpeakingReport />}
-                    </div>
+                  <div className="flex-1 min-h-0 relative">
+                    {activeTab === 'assignment' && <TabAssignment />}
+                    {activeTab === 'merger' && <TabMerger />}
+                    {activeTab === 'invigilation' && <TabInvigilation />}
+                    {activeTab === 'speaking_report' && <TabSpeakingReport />}
                   </div>
                 )}
               </div>
@@ -674,7 +567,7 @@ const MainApp = () => {
         </div>
       </main>
 
-      {/* Legacy Modals Integration */}
+      {/* Modals */}
       {showResetModal && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center z-[100] animate-in fade-in duration-300">
           <div className="bg-white rounded-3xl p-8 w-[450px] shadow-2xl border border-rose-100 animate-in zoom-in duration-300">
@@ -682,39 +575,30 @@ const MainApp = () => {
               <div className="bg-rose-100 p-3 rounded-2xl">
                 <Trash2 size={32} />
               </div>
-              Dữ liệu sẽ bị xóa vĩnh viễn
+              Dữ liệu sẽ bị xóa
             </div>
-            
-            <p className="text-gray-600 mb-8 text-sm leading-relaxed">
-              Bạn đang chuẩn bị xóa **toàn bộ dữ liệu** của kỳ thi hiện tại (Danh sách phòng, Phân công, Phách). Hành động này không thể hoàn tác và sẽ được đồng bộ lên Google Sheets.
+            <p className="text-text-body mb-8 text-sm leading-relaxed">
+              Dữ liệu kỳ thi sẽ bị xóa vĩnh viễn trên máy và Google Sheets.
             </p>
-
             <div className="space-y-4 mb-8">
-              <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Xác nhận bằng mật khẩu</label>
+              <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Mật khẩu xác nhận</label>
               <input 
                 type="password" 
                 value={resetPassword}
                 onChange={e => setResetPassword(e.target.value)}
-                className="w-full bg-slate-50 border border-gray-200 rounded-2xl px-5 py-4 text-lg focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all"
-                placeholder="Nhập mật khẩu quản trị..."
+                className="w-full bg-slate-50 border border-border-soft rounded-2xl px-5 py-4 text-lg focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all outline-none"
+                placeholder="Nhập mật khẩu..."
                 autoFocus
               />
             </div>
-
             <div className="flex gap-4">
-              <button 
-                onClick={() => { setShowResetModal(false); setResetPassword(''); }}
-                className="flex-1 py-4 text-gray-500 font-bold hover:bg-gray-100 rounded-2xl transition-colors"
-                disabled={isResetting}
-              >
-                Hủy bỏ
-              </button>
+              <button onClick={() => setShowResetModal(false)} className="flex-1 py-4 text-text-body font-bold hover:bg-slate-50 rounded-2xl transition-colors">Hủy</button>
               <button 
                 onClick={handleResetData}
                 disabled={isResetting || !resetPassword}
-                className="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-rose-600/30 hover:bg-rose-700 active:scale-95 transition-all text-sm"
+                className="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-rose-600/30 hover:bg-rose-700 transition-all text-sm disabled:opacity-50"
               >
-                {isResetting ? 'Đang thực hiện...' : 'Xác nhận xóa'}
+                {isResetting ? '...' : 'Xóa Hết'}
               </button>
             </div>
           </div>
@@ -728,52 +612,28 @@ const MainApp = () => {
               <div className="bg-amber-100 p-3 rounded-2xl">
                 <Upload size={32} />
               </div>
-              Khôi phục dữ liệu
+              Khôi phục
             </div>
-            
-            <div className="bg-amber-50 rounded-2xl p-4 mb-8 border border-amber-100 flex gap-3">
-              <AlertCircle className="text-amber-600 shrink-0" size={20} />
-              <p className="text-amber-800 text-sm leading-normal">
-                Dữ liệu hiện tại sẽ bị GHI ĐÈ hoàn toàn bởi dữ liệu từ file sao lưu: **{restoreFile?.name}**
-              </p>
-            </div>
-
+            <p className="text-text-body mb-8 text-sm leading-normal">
+              Ghi đè bằng file: **{restoreFile?.name}**
+            </p>
             <div className="flex gap-4">
-              <button 
-                onClick={() => { setShowRestoreModal(false); setRestoreFile(null); }}
-                className="flex-1 py-4 text-gray-500 font-bold hover:bg-gray-100 rounded-2xl transition-colors"
-                disabled={isRestoring}
-              >
-                Hủy bỏ
-              </button>
+              <button onClick={() => { setShowRestoreModal(false); setRestoreFile(null); }} className="flex-1 py-4 text-text-body font-bold hover:bg-slate-50 rounded-2xl transition-colors">Hủy</button>
               <button 
                 onClick={handleRestore}
                 disabled={isRestoring}
-                className="flex-1 py-4 bg-amber-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-amber-600/30 hover:bg-amber-700 active:scale-95 transition-all text-sm"
+                className="flex-1 py-4 bg-amber-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-amber-600/30 hover:bg-amber-700 transition-all text-sm disabled:opacity-50"
               >
-                {isRestoring ? 'Đang xử lý...' : 'Đồng ý khôi phục'}
+                {isRestoring ? '...' : 'Đồng ý'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <GasSetupModal 
-        isOpen={isGasModalOpen} 
-        onClose={() => setIsGasModalOpen(false)} 
-        gasUrl={gasUrl}
-        setGasUrl={setGasUrl}
-      />
-      
-      <ConfigEnglishModal
-        isOpen={isConfigEnglishModalOpen}
-        onClose={() => setIsConfigEnglishModalOpen(false)}
-      />
-
-      <ChangePasswordModal
-        isOpen={isChangePasswordModalOpen}
-        onClose={() => setIsChangePasswordModalOpen(false)}
-      />
+      <GasSetupModal isOpen={isGasModalOpen} onClose={() => setIsGasModalOpen(false)} gasUrl={gasUrl} setGasUrl={setGasUrl} />
+      <ConfigEnglishModal isOpen={isConfigEnglishModalOpen} onClose={() => setIsConfigEnglishModalOpen(false)} />
+      <ChangePasswordModal isOpen={isChangePasswordModalOpen} onClose={() => setIsChangePasswordModalOpen(false)} />
     </div>
   );
 };
