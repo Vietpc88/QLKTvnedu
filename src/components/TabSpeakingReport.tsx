@@ -34,8 +34,14 @@ export const TabSpeakingReport: React.FC = () => {
       );
       
       const totalStudents = assignedStudents.length;
-      const gradedStudents = assignedStudents.filter(s => !!String(s.speakingScore || '').trim()).length;
-      const missingStudents = assignedStudents.filter(s => !String(s.speakingScore || '').trim());
+      const gradedStudents = assignedStudents.filter(s => {
+        const score = String(s.speakingScore || '').trim();
+        return score !== '' && score !== 'undefined' && score !== 'null';
+      }).length;
+      const missingStudents = assignedStudents.filter(s => {
+        const score = String(s.speakingScore || '').trim();
+        return score === '' || score === 'undefined' || score === 'null';
+      });
       const progress = totalStudents > 0 ? Math.round((gradedStudents / totalStudents) * 100) : 0;
       
       return {
@@ -64,9 +70,10 @@ export const TabSpeakingReport: React.FC = () => {
 
     // Also find students who are 'Anh' but not assigned to any teacher
     const assignedClassSet = new Set(englishSpeakingAccounts.flatMap(a => a.assignedClasses));
-    const unassignedMissing = englishStudents.filter(s => 
-      !assignedClassSet.has(String(s.className || '').trim()) && !String(s.speakingScore || '').trim()
-    );
+    const unassignedMissing = englishStudents.filter(s => {
+      const isMissing = !String(s.speakingScore || '').trim() || String(s.speakingScore).trim() === 'undefined';
+      return !assignedClassSet.has(String(s.className || '').trim()) && isMissing;
+    });
     
     missingList = [
       ...missingList, 
@@ -100,7 +107,10 @@ export const TabSpeakingReport: React.FC = () => {
   }, [reportByTeacher]);
 
   const globalTotal = englishStudents.length;
-  const globalGraded = englishStudents.filter(s => !!String(s.speakingScore || '').trim()).length;
+  const globalGraded = englishStudents.filter(s => {
+    const score = String(s.speakingScore || '').trim();
+    return score !== '' && score !== 'undefined' && score !== 'null';
+  }).length;
   const globalProgress = globalTotal > 0 ? Math.round((globalGraded / globalTotal) * 100) : 0;
 
   return (
@@ -137,7 +147,9 @@ export const TabSpeakingReport: React.FC = () => {
              <CheckCircle size={20} className="text-emerald-500" />
              <div>
                <div className="text-[10px] uppercase font-bold text-gray-400">Tiến độ chung</div>
-               <div className="text-xl font-black text-emerald-600">{globalProgress}%</div>
+               <div className="text-xl font-black text-emerald-600">
+                 {globalGraded}/{globalTotal} ({globalTotal > 0 ? ((globalGraded / globalTotal) * 100).toFixed(1) : 0}%)
+               </div>
              </div>
           </div>
         </div>
@@ -177,7 +189,9 @@ export const TabSpeakingReport: React.FC = () => {
                       <p className="text-xs font-semibold text-gray-500 mt-0.5">SĐT: {teacher.username}</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-black text-indigo-600">{teacher.progress}%</div>
+                      <div className="text-2xl font-black text-indigo-600">
+                        {teacher.totalStudents > 0 ? ((teacher.gradedStudents / teacher.totalStudents) * 100).toFixed(1) : 0}%
+                      </div>
                     </div>
                   </div>
                   
