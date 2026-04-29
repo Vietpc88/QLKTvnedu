@@ -235,7 +235,7 @@ function handleResponse(e) {
         }
       }
 
-      // Logic đồng bộ các sheet Phach_
+      // Logic đồng bộ các sheet Phach_ (Có bảo vệ điểm số)
       if (data.syncPhach) {
         var allSheets = ss.getSheets();
         var phachSheets = {};
@@ -246,7 +246,7 @@ function handleResponse(e) {
         for (var key in data) {
           if (key.indexOf("Phach_") === 0) {
             var sheet = ss.getSheetByName(key) || ss.insertSheet(key);
-            saveToSheet(sheet, data[key]);
+            saveToPhachSheet(sheet, data[key]);
             if (phachSheets[key]) delete phachSheets[key];
           }
         }
@@ -314,6 +314,49 @@ function saveMatrixToSheet(sheet, assignments) {
   sheet.getRange(1, 1, 1, headers.length).setBackground("#f3f3f3").setFontWeight("bold");
 }
 
+function saveToPhachSheet(sheet, data) {
+  if (!data || data.length === 0) {
+    sheet.clear();
+    return;
+  }
+
+  // 1. Lấy dữ liệu hiện tại để bảo toàn điểm số
+  var existingData = getSheetData(sheet);
+  var sbdToScore = {};
+  var headers = Object.keys(data[0]);
+  var scoreColName = "Điểm Nói";
+  
+  existingData.forEach(function(row) {
+    if (row["SBD"] && row[scoreColName] !== undefined && row[scoreColName] !== "") {
+      sbdToScore[row["SBD"]] = row[scoreColName];
+    }
+  });
+
+  // 2. Xóa và ghi lại nhưng trộn điểm cũ vào nếu dữ liệu mới trống
+  sheet.clear();
+  sheet.appendRow(headers);
+  
+  var rows = data.map(function(item) {
+    return headers.map(function(h) { 
+      var val = item[h] || "";
+      
+      // Nếu là cột Điểm Nói và dữ liệu mới trống, hãy kiểm tra xem có điểm cũ không
+      if (h === scoreColName && (val === "" || val === null)) {
+        if (sbdToScore[item["SBD"]]) {
+          val = sbdToScore[item["SBD"]];
+        }
+      }
+      
+      if ((h === "SBD" || h === "Số điện thoại" || h === "date" || h === "Ngày" || h === "Ngày sinh") && val !== "" && String(val).charAt(0) !== "'") return "'" + val;
+      return val;
+    });
+  });
+  
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+}
+
 function saveToSheet(sheet, data) {
   sheet.clear();
   if (!data || data.length === 0) return;
@@ -322,7 +365,7 @@ function saveToSheet(sheet, data) {
   var rows = data.map(function(item) {
     return headers.map(function(h) { 
       var val = item[h] || "";
-      if ((h === "Số điện thoại" || h === "date" || h === "Ngày" || h === "Ngày sinh") && val !== "" && String(val).charAt(0) !== "'") return "'" + val;
+      if ((h === "SBD" || h === "Số điện thoại" || h === "date" || h === "Ngày" || h === "Ngày sinh") && val !== "" && String(val).charAt(0) !== "'") return "'" + val;
       return val;
     });
   });
@@ -331,14 +374,17 @@ function saveToSheet(sheet, data) {
 
 function getSheetData(sheet) {
   if (!sheet) return [];
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 1) return [];
   var range = sheet.getDataRange();
-  if (range.getLastRow() < 1) return [];
   var values = range.getValues();
   var headers = values[0];
   var data = [];
   for (var i = 1; i < values.length; i++) {
     var obj = {};
-    for (var j = 0; j < headers.length; j++) { obj[headers[j]] = values[i][j]; }
+    for (var j = 0; j < headers.length; j++) { 
+      obj[headers[j]] = values[i][j]; 
+    }
     data.push(obj);
   }
   return data;
