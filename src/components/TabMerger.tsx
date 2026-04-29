@@ -4,7 +4,7 @@ import * as pdfMakeLib from "pdfmake/build/pdfmake";
 import * as pdfFonts from "pdfmake/build/vfs_fonts";
 import { useAppContext } from '../store';
 import { saveToGas } from '../lib/gas';
-import { Upload, Save, Search, Trash2, Download, FileText } from 'lucide-react';
+import { Upload, Save, Search, Trash2, Download, FileText, RefreshCw } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const pdfMake = (pdfMakeLib as any).default || pdfMakeLib;
@@ -17,7 +17,7 @@ export const TabMerger: React.FC = () => {
   const { 
     mergedData, setMergedData, 
     subjectColumns, assignmentData, roomData,
-    gasUrl
+    gasUrl, refreshData
   } = useAppContext();
 
   const [loading, setLoading] = useState(false);
@@ -530,6 +530,17 @@ export const TabMerger: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 ml-auto">
+            <button 
+              onClick={handleRefresh}
+              disabled={isRefreshing || loading}
+              className={cn(
+                "flex items-center gap-1 px-4 py-1.5 bg-slate-100 text-slate-700 text-sm rounded hover:bg-slate-200 disabled:opacity-50 h-[34px]",
+                isRefreshing && "animate-spin"
+              )}
+              title="Tải lại dữ liệu mới nhất từ Cloud"
+            >
+              <RefreshCw size={16} />
+            </button>
             <button 
               onClick={handleSaveToGas} disabled={loading}
               className="flex items-center gap-1 px-4 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 h-[34px]"

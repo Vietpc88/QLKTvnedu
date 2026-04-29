@@ -1,13 +1,23 @@
 import React, { useMemo, useState } from 'react';
 import { useAppContext } from '../store';
-import { Search, AlertCircle, CheckCircle, Clock, BookOpen, Users, Filter } from 'lucide-react';
+import { Search, AlertCircle, CheckCircle, Clock, BookOpen, Users, Filter, RefreshCw } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export const TabSpeakingReport: React.FC = () => {
-  const { mergedData, englishSpeakingAccounts } = useAppContext();
+  const { mergedData, englishSpeakingAccounts, refreshData } = useAppContext();
   
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshData(false);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Lọc lấy danh sách học sinh Tiếng Anh
   const englishStudents = useMemo(() => {
@@ -96,10 +106,23 @@ export const TabSpeakingReport: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-slate-50 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
-        <div>
-          <h2 className="text-2xl font-black text-gray-800 flex items-center gap-2">
-            Thống Kê Điểm Nói Tiếng Anh
-          </h2>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-4">
+            <h2 className="text-2xl font-black text-gray-800 flex items-center gap-2">
+              Thống Kê Điểm Nói Tiếng Anh
+            </h2>
+            <button 
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className={cn(
+                "p-2 rounded-xl transition-all hover:bg-indigo-100 text-indigo-600",
+                isRefreshing && "animate-spin"
+              )}
+              title="Cập nhật dữ liệu từ Cloud"
+            >
+              <RefreshCw size={20} />
+            </button>
+          </div>
           <p className="text-gray-500 font-medium">Theo dõi tiến độ chấm điểm của các Giám khảo Tiếng Anh</p>
         </div>
         <div className="flex gap-4">

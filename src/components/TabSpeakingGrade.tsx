@@ -9,7 +9,8 @@ export const TabSpeakingGrade = () => {
 
   // Retrieve current speaking teacher account
   const currentAccount = useMemo(() => {
-    return englishSpeakingAccounts.find(acc => acc.username === loggedInPhone);
+    const phone = String(loggedInPhone || '').replace(/^'/, '');
+    return englishSpeakingAccounts.find(acc => String(acc.username).replace(/^'/, '') === phone);
   }, [englishSpeakingAccounts, loggedInPhone]);
 
   const assignedClasses = currentAccount?.assignedClasses || [];

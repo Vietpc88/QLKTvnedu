@@ -294,7 +294,8 @@ export const loadFromGas = async (gasUrl: string) => {
         sbd: String(getValue(['sbd', 'số báo danh', 'so bao danh'])).trim(),
         phach: String(getValue(['phach', 'số phách', 'mã phách', 'phách', 'so phach', 'ma phach'])).trim(),
         tui: String(getValue(['tui', 'túi', 'mã túi', 'ma tui'])).trim(),
-        subject: String(getValue(['subject', 'môn', 'mon', 'môn thi', 'monthi'])).trim()
+        subject: String(getValue(['subject', 'môn', 'mon', 'môn thi', 'monthi'])).trim(),
+        speakingScore: String(getValue(['speakingScore', 'điểm nói', 'diem noi'])).trim()
       };
     }).filter((row: any) => row.sbd || row.phach || row.name);
 
