@@ -12,13 +12,19 @@ interface Props {
 }
 
 export const ConfigEnglishModal: React.FC<Props> = ({ isOpen, onClose }) => {
-  const { englishSpeakingAccounts, setEnglishSpeakingAccounts, teacherList } = useAppContext();
+  const { 
+    englishSpeakingAccounts, setEnglishSpeakingAccounts, teacherList, gasUrl,
+    roomData, assignmentData, mergedData, examSchedule, 
+    invigilationAssignments, markingSubjects, secretariatPairs, 
+    exemptTeachers, invigilationConfig, schoolInfo, teacherConfig, 
+    anonymizationTeam, secretariatTeam, adminAccounts
+  } = useAppContext();
   
   // Local state for editing before saving
   const [accounts, setAccounts] = useState<any[]>(
     (englishSpeakingAccounts || []).map(a => ({
       ...a,
-      assignedClassesInput: a.assignedClasses.join(', ')
+      assignedClassesInput: (a.assignedClasses || []).join(', ')
     }))
   );
   const [isSaving, setIsSaving] = useState(false);
@@ -71,8 +77,19 @@ export const ConfigEnglishModal: React.FC<Props> = ({ isOpen, onClose }) => {
         assignedClasses: a.assignedClassesInput.split(',').map((c: string) => c.trim()).filter(Boolean)
       }));
       setEnglishSpeakingAccounts(finalAccounts);
-      // Wait a moment for store to update, auto-sync in App.tsx might pick it up
-      // Or we can explicitly save here
+      
+      // Explicit sync for immediate persistence
+      if (gasUrl) {
+        await saveToGas(gasUrl, {
+          roomData, teacherList, assignmentData, mergedData, examSchedule, 
+          invigilationAssignments, markingSubjects, secretariatPairs, 
+          exemptTeachers, invigilationConfig, schoolInfo, teacherConfig, 
+          anonymizationTeam, secretariatTeam, 
+          englishSpeakingAccounts: finalAccounts,
+          adminAccounts
+        }, 'sync');
+      }
+      
       alert("Đã cập nhật tài khoản thành công!");
       onClose();
     } catch (e: any) {

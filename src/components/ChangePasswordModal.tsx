@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, KeyRound, Save, AlertCircle } from 'lucide-react';
 import { useAppContext } from '../store';
+import { saveToGas } from '../lib/gas';
 
 interface Props {
   isOpen: boolean;
@@ -8,17 +9,25 @@ interface Props {
 }
 
 export const ChangePasswordModal: React.FC<Props> = ({ isOpen, onClose }) => {
-  const { loggedInPhone, englishSpeakingAccounts, setEnglishSpeakingAccounts } = useAppContext();
+  const { 
+    loggedInPhone, role, adminAccounts, setAdminAccounts, 
+    englishSpeakingAccounts, setEnglishSpeakingAccounts, gasUrl,
+    roomData, teacherList, assignmentData, mergedData, examSchedule, 
+    invigilationAssignments, markingSubjects, secretariatPairs, 
+    exemptTeachers, invigilationConfig, schoolInfo, teacherConfig, 
+    anonymizationTeam, secretariatTeam
+  } = useAppContext();
   
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
@@ -38,29 +47,96 @@ export const ChangePasswordModal: React.FC<Props> = ({ isOpen, onClose }) => {
       return;
     }
 
-    const uname = String(loggedInPhone).trim().replace(/^'/, '');
-    const accountIndex = englishSpeakingAccounts.findIndex(
-      acc => String(acc.username).replace(/^'/, '') === uname && acc.password === currentPassword.trim()
-    );
+    setIsSaving(true);
+    try {
+      if (role === 'admin') {
+        // Handle admin password change
+        let found = false;
+        const updatedAdminAccounts = adminAccounts.map(acc => {
+          const keys = Object.keys(acc);
+          let matchKey = '';
+          for (const key of keys) {
+            if (String(acc[key]).trim() === currentPassword.trim()) {
+              matchKey = key;
+              break;
+            }
+          }
+          if (matchKey) {
+            found = true;
+            return { ...acc, [matchKey]: newPassword.trim() };
+          }
+          return acc;
+        });
 
-    if (accountIndex === -1) {
-      setError('Mật khẩu hiện tại không chính xác.');
-      return;
+        // Fallback for default password if no admin accounts exist yet
+        if (!found && adminAccounts.length === 0 && currentPassword.trim() === 'Admin123') {
+          updatedAdminAccounts.push({ password: newPassword.trim() });
+          found = true;
+        }
+
+        if (!found) {
+          setError('Mật khẩu hiện tại không chính xác.');
+          setIsSaving(false);
+          return;
+        }
+
+        setAdminAccounts(updatedAdminAccounts);
+        
+        // Sync immediately
+        if (gasUrl) {
+          await saveToGas(gasUrl, {
+            roomData, teacherList, assignmentData, mergedData, examSchedule, 
+            invigilationAssignments, markingSubjects, secretariatPairs, 
+            exemptTeachers, invigilationConfig, schoolInfo, teacherConfig, 
+            anonymizationTeam, secretariatTeam, englishSpeakingAccounts,
+            adminAccounts: updatedAdminAccounts
+          }, 'sync');
+        }
+      } else {
+        // Handle english speaking teacher password change
+        const uname = String(loggedInPhone).trim().replace(/^'/, '');
+        const accountIndex = englishSpeakingAccounts.findIndex(
+          acc => String(acc.username).replace(/^'/, '') === uname && acc.password === currentPassword.trim()
+        );
+
+        if (accountIndex === -1) {
+          setError('Mật khẩu hiện tại không chính xác.');
+          setIsSaving(false);
+          return;
+        }
+
+        const updatedAccounts = [...englishSpeakingAccounts];
+        updatedAccounts[accountIndex].password = newPassword.trim();
+        
+        setEnglishSpeakingAccounts(updatedAccounts);
+
+        // Sync immediately
+        if (gasUrl) {
+          await saveToGas(gasUrl, {
+            roomData, teacherList, assignmentData, mergedData, examSchedule, 
+            invigilationAssignments, markingSubjects, secretariatPairs, 
+            exemptTeachers, invigilationConfig, schoolInfo, teacherConfig, 
+            anonymizationTeam, secretariatTeam, 
+            englishSpeakingAccounts: updatedAccounts,
+            adminAccounts
+          }, 'sync');
+        }
+      }
+
+      setSuccess('Đổi mật khẩu thành công!');
+      
+      setTimeout(() => {
+        onClose();
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setSuccess('');
+      }, 1500);
+    } catch (err: any) {
+      setError('Lỗi khi lưu mật khẩu: ' + err.message);
+    } finally {
+      setIsSaving(false);
     }
-
-    const updatedAccounts = [...englishSpeakingAccounts];
-    updatedAccounts[accountIndex].password = newPassword.trim();
-    
-    setEnglishSpeakingAccounts(updatedAccounts);
-    setSuccess('Đổi mật khẩu thành công!');
-    
-    setTimeout(() => {
-      onClose();
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      setSuccess('');
-    }, 1500);
   };
 
   return (
@@ -126,9 +202,15 @@ export const ChangePasswordModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
           <button
             type="submit"
-            className="w-full mt-4 bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+            disabled={isSaving}
+            className="w-full mt-4 bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            <Save size={18} /> Lưu thay đổi
+            {isSaving ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            ) : (
+              <Save size={18} />
+            )}
+            {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
           </button>
         </form>
       </div>

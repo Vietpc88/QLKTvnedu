@@ -147,7 +147,7 @@ const MainApp = () => {
           roomData, teacherList, assignmentData, mergedData, examSchedule, 
           invigilationAssignments, markingSubjects, secretariatPairs, 
           exemptTeachers, invigilationConfig, schoolInfo, teacherConfig, 
-          anonymizationTeam, secretariatTeam, englishSpeakingAccounts
+          anonymizationTeam, secretariatTeam, englishSpeakingAccounts, adminAccounts
         }, 'sync');
         setSyncStatus('saved');
         setTimeout(() => setSyncStatus('idle'), 3000);
@@ -162,7 +162,7 @@ const MainApp = () => {
     roomData, teacherList, assignmentData, mergedData, examSchedule, 
     invigilationAssignments, markingSubjects, secretariatPairs, 
     exemptTeachers, invigilationConfig, schoolInfo, teacherConfig, 
-    anonymizationTeam, secretariatTeam, gasUrl, englishSpeakingAccounts
+    anonymizationTeam, secretariatTeam, gasUrl, englishSpeakingAccounts, adminAccounts
   ]);
 
   useEffect(() => {
