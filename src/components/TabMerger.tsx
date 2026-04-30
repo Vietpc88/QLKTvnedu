@@ -29,6 +29,7 @@ export const TabMerger: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [showMergedData, setShowMergedData] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -164,6 +165,17 @@ export const TabMerger: React.FC = () => {
       alert(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshData();
+      // Small delay for visual feedback
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
