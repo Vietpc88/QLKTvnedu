@@ -73,6 +73,11 @@ const MainApp = () => {
 
     try {
       const data = await loadFromFirebase() || {};
+      console.log("Dữ liệu tải từ Firebase:", {
+        students: data.originalData?.length || 0,
+        scores: data.mergedData?.length || 0,
+        assignments: data.assignmentData?.length || 0
+      });
       
       setOriginalData(data.originalData || []);
       setAssignmentData(data.assignmentData || []);
