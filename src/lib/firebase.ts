@@ -49,13 +49,34 @@ db = initFirebase();
 
 const COLLECTION_NAME = "appData";
 
-export const saveToFirebase = async (payload: any) => {
+export const clearAssignments = async () => {
+  if (!db) db = initFirebase();
+  if (!db) throw new Error("Firebase chưa được cấu hình");
+  
+  try {
+    const assignCol = collection(db, COLLECTION_NAME, 'assignments', 'items');
+    const snapshot = await getDocs(assignCol);
+    const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+    await Promise.all(deletePromises);
+    return { status: 'success' };
+  } catch (error: any) {
+    console.error("Error clearing assignments:", error);
+    throw new Error(`Lỗi khi dọn dẹp phân công: ${error.message}`);
+  }
+};
+
+export const saveToFirebase = async (payload: any, options: { clearAssignments?: boolean } = {}) => {
   if (!db) db = initFirebase();
   if (!db) throw new Error("Firebase chưa được cấu hình");
 
   try {
     const cleanPayload = JSON.parse(JSON.stringify(payload));
     const timestamp = new Date().toISOString();
+
+    // Clear assignments if requested
+    if (options.clearAssignments) {
+      await clearAssignments();
+    }
 
     // 1. Handle regular categories
     const mapping: Record<string, string[]> = {
@@ -83,16 +104,29 @@ export const saveToFirebase = async (payload: any) => {
       }
     }
 
-    // 2. NEW: Atomic Assignments (One document per assignment to prevent overwriting)
+    // 2. Atomic Assignments (One document per assignment)
     if (cleanPayload.assignmentData && Array.isArray(cleanPayload.assignmentData)) {
       for (const item of cleanPayload.assignmentData) {
-        // Generate a stable ID if it doesn't exist
-        const stableId = item.id || `${item.grade || 'G'}-${item.subject || 'S'}-${item.package || item.bagCode || 'P'}-${item.room || 'R'}`;
-        const assignmentDocRef = doc(db, COLLECTION_NAME, 'assignments', 'items', stableId);
+        // NORMALIZE: Convert Vietnamese keys to English keys if they exist
+        const normalizedItem: any = {
+          grade: item.grade || item['Khối'] || item.level || '',
+          subject: item.subject || item['Môn'] || item.sub || '',
+          teacherName: item.teacherName || item['Giáo viên'] || item.teacher || '',
+          package: item.package || item['Mã túi'] || item.bagCode || item.code || '',
+          room: item.room || item['Phòng'] || item.roomNumber || '',
+          phone: item.phone || item['Số điện thoại'] || item['SĐT'] || '',
+          stt: item.stt || item['STT'] || '',
+          status: item.status || item['Trạng thái'] || 'Chưa',
+          color: item.color || '#FFFFFF',
+          timestamp: item.timestamp || item['Ngày giờ nhập'] || new Date().toLocaleString('vi-VN')
+        };
+
+        // Generate a truly stable ID from normalized data
+        const stableId = item.id || `${normalizedItem.grade}-${normalizedItem.subject}-${normalizedItem.package}-${normalizedItem.room}`.replace(/\s+/g, '_');
         
-        // Ensure the ID is stored inside the document too
+        const assignmentDocRef = doc(db, COLLECTION_NAME, 'assignments', 'items', stableId);
         await setDoc(assignmentDocRef, { 
-          ...item, 
+          ...normalizedItem, 
           id: stableId,
           updatedAt: timestamp 
         }, { merge: true });

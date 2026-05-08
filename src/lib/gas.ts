@@ -61,7 +61,7 @@ export const migrateDataToFirebase = async (gasUrl: string) => {
       }
     }
 
-    await saveToFirebase(dataPart);
+    await saveToFirebase(dataPart, { clearAssignments: true });
     return { status: "success", message: "Di chuyển thành công!" };
   } catch (error: any) {
     throw new Error(`Di chuyển thất bại: ${error.message}`);
