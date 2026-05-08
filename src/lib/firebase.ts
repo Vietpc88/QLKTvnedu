@@ -86,7 +86,7 @@ export const saveToFirebase = async (payload: any) => {
       });
 
       if (hasData) {
-        await setDoc(doc(db, COLLECTION_NAME, docId), docData);
+        await setDoc(doc(db, COLLECTION_NAME, docId), docData, { merge: true });
       }
     }
 
