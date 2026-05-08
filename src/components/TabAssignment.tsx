@@ -36,7 +36,7 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
     teachers, setTeachers,
     teacherList, setTeacherList,
     gasUrl, currentFile, setCurrentFile,
-    role, setMergedData, isLoadingInitial
+    role, setMergedData, isLoadingInitial, loggedInTeacher
   } = useAppContext();
 
   const [loading, setLoading] = useState(false);
@@ -768,14 +768,22 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
 
   const filteredAssignmentData = useMemo(() => {
     let data = assignmentData;
+    
+    // Auto-filter for teachers (Multi-user security/convenience)
+    if (role === 'teacher' && loggedInTeacher) {
+      data = data.filter(r => 
+        String(r.teacherName || r.teacher || '').trim() === String(loggedInTeacher).trim()
+      );
+    }
+
     if (filterGrade) {
       data = data.filter(r => String(r.grade).trim() === String(filterGrade).trim());
     }
     if (filterSubject) {
       data = data.filter(r => String(r.subject).trim() === String(filterSubject).trim());
     }
-    if (filterTeacher) {
-      data = data.filter(r => String(r.teacher).trim() === String(filterTeacher).trim());
+    if (filterTeacher && role === 'admin') {
+      data = data.filter(r => String(r.teacherName || r.teacher || '').trim() === String(filterTeacher).trim());
     }
     if (filterStatus) {
       data = data.filter(r => (r.status || 'Chưa') === filterStatus);
@@ -785,7 +793,7 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
       data = data.filter(r => pkgs.includes(String(r.package).trim().toUpperCase()));
     }
     return data;
-  }, [assignmentData, filterGrade, filterSubject, filterTeacher, filterStatus, packageSearch]);
+  }, [assignmentData, filterGrade, filterSubject, filterTeacher, filterStatus, packageSearch, role, loggedInTeacher]);
 
   const handleExportExcel = () => {
     if (filteredAssignmentData.length === 0) {
