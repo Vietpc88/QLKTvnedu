@@ -25,15 +25,26 @@ export const migrateDataToFirebase = async (gasUrl: string) => {
     const result = await response.json();
     const dataPart = result.data || result;
     
-    // Process Phach_ sheets if they exist in the raw response
-    const phachSheets = Object.keys(dataPart).filter(k => k.startsWith("Phach_"));
+    // 1. Filter subjectColumns to remove empty or invalid ones
+    if (Array.isArray(dataPart.subjectColumns)) {
+      dataPart.subjectColumns = dataPart.subjectColumns.filter((s: string) => 
+        s && s.trim() !== "" && !s.includes("EMPTY_") && !s.includes("Column")
+      );
+    }
+
+    // 2. Process Phach_ sheets if they exist in the raw response
+    const phachSheets = Object.keys(dataPart).filter(k => 
+      k.startsWith("Phach_") && k.replace("Phach_", "").trim() !== "" && !k.includes("EMPTY_")
+    );
+    
     if (phachSheets.length > 0) {
       const mergedData: any[] = [];
       phachSheets.forEach(sheetName => {
         const rows = dataPart[sheetName];
         if (Array.isArray(rows)) {
+          const subjectName = sheetName.replace("Phach_", "").trim();
           rows.forEach((row: any) => {
-            mergedData.push({ ...row, subject: sheetName.replace("Phach_", "") });
+            mergedData.push({ ...row, subject: subjectName });
           });
         }
       });
