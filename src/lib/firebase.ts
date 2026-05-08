@@ -41,7 +41,6 @@ export const initFirebase = (config?: any) => {
 // Initialize on load if config exists
 db = initFirebase();
 
-const DATA_DOC_ID = "mainData";
 const COLLECTION_NAME = "appData";
 
 export const saveToFirebase = async (payload: any) => {
@@ -49,15 +48,42 @@ export const saveToFirebase = async (payload: any) => {
   if (!db) throw new Error("Firebase chưa được cấu hình");
 
   try {
-    const dataRef = doc(db, COLLECTION_NAME, DATA_DOC_ID);
-    
-    // We filter out functions or undefined values if any
+    const batch: any = {};
     const cleanPayload = JSON.parse(JSON.stringify(payload));
-    
-    await setDoc(dataRef, {
-      ...cleanPayload,
-      updatedAt: new Date().toISOString()
-    });
+
+    // Map payload parts to specific documents
+    const mapping = {
+      students: ['originalData', 'subjectColumns', 'roomData'],
+      assignments: ['assignmentData'],
+      scores: ['mergedData'],
+      auth: ['adminAccounts', 'teacherList', 'englishSpeakingAccounts'],
+      config: [
+        'examSchedule', 'markingSubjects', 'teacherConfig', 
+        'invigilationConfig', 'schoolInfo', 'anonymizationTeam', 
+        'secretariatTeam', 'exemptTeachers', 'secretariatPairs',
+        'invigilationAssignments'
+      ]
+    };
+
+    const timestamp = new Date().toISOString();
+
+    // Prepare batch-like updates (using multiple setDoc calls for simplicity in this helper)
+    for (const [docId, keys] of Object.entries(mapping)) {
+      const docData: any = { updatedAt: timestamp };
+      let hasData = false;
+      
+      keys.forEach(key => {
+        if (cleanPayload[key] !== undefined) {
+          docData[key] = cleanPayload[key];
+          hasData = true;
+        }
+      });
+
+      if (hasData) {
+        await setDoc(doc(db, COLLECTION_NAME, docId), docData);
+      }
+    }
+
     return { status: 'success' };
   } catch (error: any) {
     console.error("Error saving to Firebase:", error);
@@ -70,13 +96,17 @@ export const loadFromFirebase = async () => {
   if (!db) throw new Error("Firebase chưa được cấu hình");
 
   try {
-    const dataRef = doc(db, COLLECTION_NAME, DATA_DOC_ID);
-    const docSnap = await getDoc(dataRef);
-    if (docSnap.exists()) {
-      return docSnap.data();
-    } else {
-      return null;
+    const documents = ['students', 'assignments', 'scores', 'auth', 'config'];
+    const results: any = {};
+
+    for (const docId of documents) {
+      const docSnap = await getDoc(doc(db, COLLECTION_NAME, docId));
+      if (docSnap.exists()) {
+        Object.assign(results, docSnap.data());
+      }
     }
+
+    return Object.keys(results).length > 0 ? results : null;
   } catch (error: any) {
     console.error("Error loading from Firebase:", error);
     throw new Error(`Lỗi khi tải từ Firebase: ${error.message}`);
@@ -88,11 +118,26 @@ export const updateFieldInFirebase = async (field: string, value: any) => {
   if (!db) throw new Error("Firebase chưa được cấu hình");
 
   try {
-    const dataRef = doc(db, COLLECTION_NAME, DATA_DOC_ID);
-    await updateDoc(dataRef, {
+    // Determine which document to update
+    const mapping: any = {
+      originalData: 'students', subjectColumns: 'students', roomData: 'students',
+      assignmentData: 'assignments',
+      mergedData: 'scores',
+      adminAccounts: 'auth', teacherList: 'auth', englishSpeakingAccounts: 'auth',
+      examSchedule: 'config', markingSubjects: 'config', teacherConfig: 'config',
+      invigilationConfig: 'config', schoolInfo: 'config', anonymizationTeam: 'config',
+      secretariatTeam: 'config', exemptTeachers: 'config', secretariatPairs: 'config',
+      invigilationAssignments: 'config'
+    };
+
+    const docId = mapping[field] || "mainData";
+    const dataRef = doc(db, COLLECTION_NAME, docId);
+    
+    await setDoc(dataRef, {
       [field]: value,
       updatedAt: new Date().toISOString()
-    });
+    }, { merge: true });
+    
     return { status: 'success' };
   } catch (error: any) {
     console.error(`Error updating field ${field} in Firebase:`, error);
