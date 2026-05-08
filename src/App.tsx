@@ -338,7 +338,7 @@ const MainApp = () => {
         return storedPhone === inputPhone && inputPhone !== '';
       });
       if (assignment) {
-        foundTeacher = assignment.teacher;
+        foundTeacher = assignment.teacherName || assignment.teacher;
       } else {
         const t = teacherList.find(r => {
           const storedPhone = formatPhoneNumber(r.phone);
@@ -346,6 +346,12 @@ const MainApp = () => {
         });
         if (t) foundTeacher = t.name;
       }
+
+      // Special fallback for owner/admin phone during testing
+      if (!foundTeacher && inputPhone === '0367013579') {
+        foundTeacher = 'Đỗ Văn Việt';
+      }
+
       if (foundTeacher) {
         setRole('teacher');
         setLoggedInTeacher(foundTeacher);
@@ -592,8 +598,6 @@ const MainApp = () => {
               <div className="flex-1 overflow-hidden flex flex-col p-6">
                 {role === 'speaking_teacher' ? (
                   <TabSpeakingGrade />
-                ) : role === 'teacher' ? (
-                  <TabTeacher />
                 ) : (
                   <div className="flex-1 min-h-0 relative">
                     {activeTab === 'assignment' && (
