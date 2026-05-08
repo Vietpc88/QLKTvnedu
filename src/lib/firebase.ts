@@ -58,9 +58,8 @@ export const saveToFirebase = async (payload: any) => {
     const timestamp = new Date().toISOString();
 
     // 1. Handle regular categories
-    const mapping = {
+    const mapping: any = {
       students: ['originalData', 'subjectColumns', 'roomData'],
-      assignments: ['assignmentData'],
       auth: ['adminAccounts', 'teacherList', 'englishSpeakingAccounts'],
       config: [
         'examSchedule', 'markingSubjects', 'teacherConfig', 
@@ -71,11 +70,9 @@ export const saveToFirebase = async (payload: any) => {
     };
 
     for (const [docId, keys] of Object.entries(mapping)) {
-      if (docId === 'assignments') continue; // Handle assignments separately below
-      
       const docData: any = { updatedAt: timestamp };
       let hasData = false;
-      keys.forEach(key => {
+      keys.forEach((key: any) => {
         if (cleanPayload[key] !== undefined) {
           docData[key] = cleanPayload[key];
           hasData = true;
@@ -89,9 +86,16 @@ export const saveToFirebase = async (payload: any) => {
     // 2. NEW: Atomic Assignments (One document per assignment to prevent overwriting)
     if (cleanPayload.assignmentData && Array.isArray(cleanPayload.assignmentData)) {
       for (const item of cleanPayload.assignmentData) {
-        if (!item.id) continue;
-        const assignmentDocRef = doc(db, COLLECTION_NAME, 'assignments', 'items', item.id);
-        await setDoc(assignmentDocRef, { ...item, updatedAt: timestamp }, { merge: true });
+        // Generate a stable ID if it doesn't exist
+        const stableId = item.id || `${item.grade || 'G'}-${item.subject || 'S'}-${item.package || item.bagCode || 'P'}-${item.room || 'R'}`;
+        const assignmentDocRef = doc(db, COLLECTION_NAME, 'assignments', 'items', stableId);
+        
+        // Ensure the ID is stored inside the document too
+        await setDoc(assignmentDocRef, { 
+          ...item, 
+          id: stableId,
+          updatedAt: timestamp 
+        }, { merge: true });
       }
     }
 
@@ -140,11 +144,14 @@ export const loadFromFirebase = async () => {
       }
     }
 
-    // 2. Load Assignments from Sub-collection
+    // 2. Load Assignments from Sub-collection (Priority)
     const assignCol = collection(db, COLLECTION_NAME, 'assignments', 'items');
     const assignSnap = await getDocs(assignCol);
     const assignmentData: any[] = [];
-    assignSnap.forEach(doc => assignmentData.push(doc.data()));
+    assignSnap.forEach(doc => {
+      const data = doc.data();
+      assignmentData.push({ ...data, id: doc.id }); // Ensure ID is present
+    });
     results.assignmentData = assignmentData;
 
     // 3. Load split scores
@@ -164,19 +171,18 @@ export const loadFromFirebase = async () => {
       }
     }
 
-    // 4. EMERGENCY FALLBACK
+    // 4. EMERGENCY FALLBACK (Safe merge)
     if (!results.originalData || results.originalData.length === 0) {
-      console.log("Critical data missing, performing full collection scan...");
       const q = query(collection(db, COLLECTION_NAME));
       const querySnapshot = await getDocs(q);
-      console.log(`Found ${querySnapshot.size} documents in ${COLLECTION_NAME}`);
       
       querySnapshot.forEach((doc) => {
-        const docId = doc.id;
+        // Skip specialized documents
+        if (['assignments', 'scores_index'].includes(doc.id) || doc.id.startsWith('score_')) return;
+        
         const data = doc.data();
         if (data.originalData) results.originalData = data.originalData;
         if (data.mergedData && (!results.mergedData || results.mergedData.length === 0)) results.mergedData = data.mergedData;
-        if (data.assignmentData && (!results.assignmentData || results.assignmentData.length === 0)) results.assignmentData = data.assignmentData;
         if (data.subjectColumns) results.subjectColumns = data.subjectColumns;
         Object.assign(results, data);
       });
