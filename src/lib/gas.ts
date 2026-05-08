@@ -148,36 +148,19 @@ export const saveToGas = async (gasUrl: string, payload: any, action: 'sync' | '
   }
 };
 
-export const loadFromGas = async (gasUrl: string) => {
+export const loadFromGas = async (gasUrl: string): Promise<any> => {
   const storageType = localStorage.getItem('storageType') || 'gas';
   
   if (storageType === 'firebase') {
     try {
       const data: any = await loadFromFirebase();
-      if (data) {
-        // Firebase data is already mapped, but we should ensure all fields exist
-        return {
-          originalData: data.originalData || [],
-          assignmentData: data.assignmentData || [],
-          subjectColumns: data.subjectColumns || [],
-          mergedData: data.mergedData || [],
-          adminAccounts: data.adminAccounts || [],
-          teacherConfig: data.teacherConfig || [],
-          examSchedule: data.examSchedule || [],
-          anonymizationTeam: data.anonymizationTeam || [],
-          secretariatTeam: data.secretariatTeam || [],
-          markingSubjects: data.markingSubjects || [],
-          exemptTeachers: data.exemptTeachers || [],
-          secretariatPairs: data.secretariatPairs || [],
-          schoolInfo: data.schoolInfo || null,
-          teacherList: data.teacherList || [],
-          roomData: data.roomData || [],
-          invigilationConfig: data.invigilationConfig || { invigilatorsPerRoom: 2 },
-          englishSpeakingAccounts: data.englishSpeakingAccounts || []
-        };
+      if (data && Object.keys(data).length > 0) {
+        return data;
       }
-    } catch (e) {
-      console.warn("Firebase load failed, falling back to GAS", e);
+      throw new Error("Không tìm thấy dữ liệu trên Firebase. Nếu bạn mới chuyển sang Firebase, hãy dùng tính năng Migration.");
+    } catch (e: any) {
+      console.error("Firebase load failed:", e);
+      throw e;
     }
   }
 
