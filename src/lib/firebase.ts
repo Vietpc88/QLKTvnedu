@@ -128,7 +128,7 @@ export const loadFromFirebase = async () => {
       }
     }
 
-    // Load split scores
+    // 2. Load scores (Try new split structure first, then fallback to legacy)
     const indexSnap = await getDoc(doc(db, COLLECTION_NAME, 'scores_index'));
     if (indexSnap.exists()) {
       const { subjects } = indexSnap.data();
@@ -143,6 +143,21 @@ export const loadFromFirebase = async () => {
         }
       }
       results.mergedData = allScores;
+    } 
+
+    // FALLBACK: If mergedData is still empty, try the legacy 'scores' or 'mainData' documents
+    if (!results.mergedData || results.mergedData.length === 0) {
+      const legacyDocs = ['scores', 'mainData'];
+      for (const oldId of legacyDocs) {
+        const oldSnap = await getDoc(doc(db, COLLECTION_NAME, oldId));
+        if (oldSnap.exists()) {
+          const oldData = oldSnap.data();
+          if (oldData.mergedData) {
+            results.mergedData = oldData.mergedData;
+            break;
+          }
+        }
+      }
     }
 
     return Object.keys(results).length > 0 ? results : null;

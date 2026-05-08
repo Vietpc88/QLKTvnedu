@@ -505,6 +505,7 @@ const MainApp = () => {
                 <span className="text-[10px] font-bold text-text-body uppercase tracking-wider">
                   {syncStatus === 'syncing' ? 'Đang lưu...' : (localStorage.getItem('storageType') === 'firebase' ? 'Firebase Sync' : 'GAS Sync')}
                 </span>
+                <span className="text-[9px] font-medium text-slate-300 ml-2 border-l border-slate-200 pl-2">v1.2.6</span>
               </div>
             )}
           </div>
