@@ -150,13 +150,25 @@ export const loadFromFirebase = async () => {
       console.log("Critical data missing, performing full collection scan...");
       const q = query(collection(db, COLLECTION_NAME));
       const querySnapshot = await getDocs(q);
+      console.log(`Found ${querySnapshot.size} documents in ${COLLECTION_NAME}`);
+      
       querySnapshot.forEach((doc) => {
+        const docId = doc.id;
         const data = doc.data();
+        console.log(`Processing document: ${docId}`, Object.keys(data));
+        
         // Merge anything that looks like our data
-        if (data.originalData) results.originalData = data.originalData;
-        if (data.mergedData && (!results.mergedData || results.mergedData.length === 0)) results.mergedData = data.mergedData;
+        if (data.originalData) {
+          console.log(`Found originalData in ${docId}`);
+          results.originalData = data.originalData;
+        }
+        if (data.mergedData && (!results.mergedData || results.mergedData.length === 0)) {
+          console.log(`Found mergedData in ${docId}`);
+          results.mergedData = data.mergedData;
+        }
         if (data.assignmentData) results.assignmentData = data.assignmentData;
         if (data.subjectColumns) results.subjectColumns = data.subjectColumns;
+        
         // Merge top-level fields
         Object.assign(results, data);
       });
