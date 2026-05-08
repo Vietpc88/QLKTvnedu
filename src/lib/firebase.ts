@@ -54,14 +54,13 @@ export const saveToFirebase = async (payload: any) => {
   if (!db) throw new Error("Firebase chưa được cấu hình");
 
   try {
-    const batch: any = {};
     const cleanPayload = JSON.parse(JSON.stringify(payload));
+    const timestamp = new Date().toISOString();
 
-    // Map payload parts to specific documents
+    // 1. Handle regular categories
     const mapping = {
       students: ['originalData', 'subjectColumns', 'roomData'],
       assignments: ['assignmentData'],
-      scores: ['mergedData'],
       auth: ['adminAccounts', 'teacherList', 'englishSpeakingAccounts'],
       config: [
         'examSchedule', 'markingSubjects', 'teacherConfig', 
@@ -71,23 +70,39 @@ export const saveToFirebase = async (payload: any) => {
       ]
     };
 
-    const timestamp = new Date().toISOString();
-
-    // Prepare batch-like updates (using multiple setDoc calls for simplicity in this helper)
     for (const [docId, keys] of Object.entries(mapping)) {
       const docData: any = { updatedAt: timestamp };
       let hasData = false;
-      
       keys.forEach(key => {
         if (cleanPayload[key] !== undefined) {
           docData[key] = cleanPayload[key];
           hasData = true;
         }
       });
-
       if (hasData) {
         await setDoc(doc(db, COLLECTION_NAME, docId), docData, { merge: true });
       }
+    }
+
+    // 2. Special handling for mergedData (Scores) to avoid 1MB limit
+    if (cleanPayload.mergedData && Array.isArray(cleanPayload.mergedData)) {
+      const subjects = [...new Set(cleanPayload.mergedData.map((d: any) => d.subject))];
+      
+      // Save each subject in a separate document
+      for (const sub of subjects) {
+        if (!sub) continue;
+        const subData = cleanPayload.mergedData.filter((d: any) => d.subject === sub);
+        await setDoc(doc(db, COLLECTION_NAME, `score_${sub}`), { 
+          data: subData,
+          updatedAt: timestamp 
+        }, { merge: true });
+      }
+
+      // Save an index of subjects to know what to load
+      await setDoc(doc(db, COLLECTION_NAME, 'scores_index'), { 
+        subjects,
+        updatedAt: timestamp 
+      }, { merge: true });
     }
 
     return { status: 'success' };
@@ -102,14 +117,32 @@ export const loadFromFirebase = async () => {
   if (!db) throw new Error("Firebase chưa được cấu hình");
 
   try {
-    const documents = ['students', 'assignments', 'scores', 'auth', 'config'];
+    const categories = ['students', 'assignments', 'auth', 'config'];
     const results: any = {};
 
-    for (const docId of documents) {
+    // Load regular categories
+    for (const docId of categories) {
       const docSnap = await getDoc(doc(db, COLLECTION_NAME, docId));
       if (docSnap.exists()) {
         Object.assign(results, docSnap.data());
       }
+    }
+
+    // Load split scores
+    const indexSnap = await getDoc(doc(db, COLLECTION_NAME, 'scores_index'));
+    if (indexSnap.exists()) {
+      const { subjects } = indexSnap.data();
+      const allScores: any[] = [];
+      if (Array.isArray(subjects)) {
+        for (const sub of subjects) {
+          const subSnap = await getDoc(doc(db, COLLECTION_NAME, `score_${sub}`));
+          if (subSnap.exists()) {
+            const subData = subSnap.data().data;
+            if (Array.isArray(subData)) allScores.push(...subData);
+          }
+        }
+      }
+      results.mergedData = allScores;
     }
 
     return Object.keys(results).length > 0 ? results : null;
@@ -124,11 +157,13 @@ export const updateFieldInFirebase = async (field: string, value: any) => {
   if (!db) throw new Error("Firebase chưa được cấu hình");
 
   try {
-    // Determine which document to update
+    if (field === 'mergedData' && Array.isArray(value)) {
+      return await saveToFirebase({ mergedData: value });
+    }
+
     const mapping: any = {
       originalData: 'students', subjectColumns: 'students', roomData: 'students',
       assignmentData: 'assignments',
-      mergedData: 'scores',
       adminAccounts: 'auth', teacherList: 'auth', englishSpeakingAccounts: 'auth',
       examSchedule: 'config', markingSubjects: 'config', teacherConfig: 'config',
       invigilationConfig: 'config', schoolInfo: 'config', anonymizationTeam: 'config',
@@ -137,9 +172,7 @@ export const updateFieldInFirebase = async (field: string, value: any) => {
     };
 
     const docId = mapping[field] || "mainData";
-    const dataRef = doc(db, COLLECTION_NAME, docId);
-    
-    await setDoc(dataRef, {
+    await setDoc(doc(db, COLLECTION_NAME, docId), {
       [field]: value,
       updatedAt: new Date().toISOString()
     }, { merge: true });
