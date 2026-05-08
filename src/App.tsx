@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { cn, formatPhoneNumber } from './lib/utils';
 import { loadFromGas, saveToGas } from './lib/gas';
-import { saveToFirebase, loadFromFirebase } from './lib/firebase';
+import { saveToFirebase, loadFromFirebase, subscribeToAssignments } from './lib/firebase';
 import { downloadJSON, readJSONFile } from './lib/backupUtils';
 import { FirebaseSetupModal } from './components/FirebaseSetupModal';
 import { Database } from 'lucide-react';
