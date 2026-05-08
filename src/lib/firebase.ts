@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, getDocs } from "firebase/firestore";
 
 // Function to get config from localStorage or environment
 const getFirebaseConfig = () => {
@@ -117,10 +117,10 @@ export const loadFromFirebase = async () => {
   if (!db) throw new Error("Firebase chưa được cấu hình");
 
   try {
-    const categories = ['students', 'assignments', 'auth', 'config'];
     const results: any = {};
 
-    // Load regular categories
+    // 1. Load by categories (Optimized way)
+    const categories = ['students', 'assignments', 'auth', 'config', 'scores', 'mainData'];
     for (const docId of categories) {
       const docSnap = await getDoc(doc(db, COLLECTION_NAME, docId));
       if (docSnap.exists()) {
@@ -128,12 +128,12 @@ export const loadFromFirebase = async () => {
       }
     }
 
-    // 2. Load scores (Try new split structure first, then fallback to legacy)
+    // 2. Load split scores
     const indexSnap = await getDoc(doc(db, COLLECTION_NAME, 'scores_index'));
     if (indexSnap.exists()) {
       const { subjects } = indexSnap.data();
-      const allScores: any[] = [];
       if (Array.isArray(subjects)) {
+        const allScores: any[] = results.mergedData || [];
         for (const sub of subjects) {
           const subSnap = await getDoc(doc(db, COLLECTION_NAME, `score_${sub}`));
           if (subSnap.exists()) {
@@ -141,23 +141,25 @@ export const loadFromFirebase = async () => {
             if (Array.isArray(subData)) allScores.push(...subData);
           }
         }
+        results.mergedData = allScores;
       }
-      results.mergedData = allScores;
-    } 
+    }
 
-    // FALLBACK: If mergedData is still empty, try the legacy 'scores' or 'mainData' documents
-    if (!results.mergedData || results.mergedData.length === 0) {
-      const legacyDocs = ['scores', 'mainData'];
-      for (const oldId of legacyDocs) {
-        const oldSnap = await getDoc(doc(db, COLLECTION_NAME, oldId));
-        if (oldSnap.exists()) {
-          const oldData = oldSnap.data();
-          if (oldData.mergedData) {
-            results.mergedData = oldData.mergedData;
-            break;
-          }
-        }
-      }
+    // 3. EMERGENCY FALLBACK: Scan the entire collection if still missing critical data
+    if (!results.originalData || results.originalData.length === 0) {
+      console.log("Critical data missing, performing full collection scan...");
+      const q = query(collection(db, COLLECTION_NAME));
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        // Merge anything that looks like our data
+        if (data.originalData) results.originalData = data.originalData;
+        if (data.mergedData && (!results.mergedData || results.mergedData.length === 0)) results.mergedData = data.mergedData;
+        if (data.assignmentData) results.assignmentData = data.assignmentData;
+        if (data.subjectColumns) results.subjectColumns = data.subjectColumns;
+        // Merge top-level fields
+        Object.assign(results, data);
+      });
     }
 
     return Object.keys(results).length > 0 ? results : null;
