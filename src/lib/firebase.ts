@@ -4,14 +4,8 @@ import { getFirestore, doc, setDoc, getDoc, updateDoc } from "firebase/firestore
 
 // Function to get config from localStorage or environment
 const getFirebaseConfig = () => {
-  try {
-    const saved = localStorage.getItem('firebaseConfig');
-    if (saved) return JSON.parse(saved);
-  } catch (e) {
-    console.error("Failed to parse firebaseConfig from localStorage", e);
-  }
-
-  return {
+  // 1. Always prioritize Environment Variables (Vercel/Build-time)
+  const envConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
     projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
@@ -19,6 +13,18 @@ const getFirebaseConfig = () => {
     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
     appId: import.meta.env.VITE_FIREBASE_APP_ID || ""
   };
+
+  if (envConfig.projectId) return envConfig;
+
+  // 2. Fallback to localStorage for local testing if no Env Vars
+  try {
+    const saved = localStorage.getItem('firebaseConfig');
+    if (saved) return JSON.parse(saved);
+  } catch (e) {
+    console.error("Failed to parse firebaseConfig from localStorage", e);
+  }
+
+  return envConfig;
 };
 
 let app: any;

@@ -25,7 +25,6 @@ import { Database } from 'lucide-react';
 
 const MainApp = () => {
   const [activeTab, setActiveTab] = useState<'assignment' | 'merger' | 'invigilation' | 'speaking_report'>('assignment');
-  const [isGasModalOpen, setIsGasModalOpen] = useState(false);
   const [isFirebaseModalOpen, setIsFirebaseModalOpen] = useState(false);
   const [isConfigEnglishModalOpen, setIsConfigEnglishModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
@@ -43,7 +42,6 @@ const MainApp = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { 
-    gasUrl, setGasUrl,
     originalData, setOriginalData, 
     assignmentData, setAssignmentData, 
     mergedData, setMergedData, 
@@ -70,27 +68,12 @@ const MainApp = () => {
   } = useAppContext();
 
   const fetchInitialData = async (showLoading = true) => {
-    if (!gasUrl) {
-      setIsLoadingInitial(false);
-      return;
-    }
     if (showLoading) setIsLoadingInitial(true);
     else setIsRefreshing(true);
 
     try {
-      const storageType = localStorage.getItem('storageType') || 'gas';
-      let data: any;
-
-      if (storageType === 'firebase') {
-        data = await loadFromFirebase();
-        if (!data) {
-          // If no data in Firebase, fallback to GAS or show empty
-          if (gasUrl) data = await loadFromGas(gasUrl);
-          else data = {};
-        }
-      } else {
-        data = await loadFromGas(gasUrl);
-      }
+      const data = await loadFromFirebase() || {};
+      
       setOriginalData(data.originalData || []);
       setAssignmentData(data.assignmentData || []);
       setSubjectColumns(data.subjectColumns || []);
@@ -130,7 +113,6 @@ const MainApp = () => {
           });
         }
         if (data.assignmentData) {
-          // Temporarily normalize assignment data phone numbers to show correctly in UI
           const normalizedAssignments = data.assignmentData.map((a: any) => ({
             ...a,
             phone: formatPhoneNumber(a.phone)
@@ -141,7 +123,7 @@ const MainApp = () => {
         setTeachers(Array.from(tSet).sort());
       }
     } catch (error: any) {
-      console.error("Failed to load initial data from GAS:", error);
+      console.error("Failed to load initial data from Firebase:", error);
       if (showLoading) alert(error.message);
     } finally {
       setIsLoadingInitial(false);
@@ -151,16 +133,14 @@ const MainApp = () => {
 
   useEffect(() => {
     fetchInitialData();
-  }, [gasUrl]);
+  }, []);
 
   useEffect(() => {
-    const storageType = localStorage.getItem('storageType') || 'gas';
-    if ((storageType === 'gas' && !gasUrl) || isLoadingInitial || role !== 'admin') return;
+    if (isLoadingInitial || role !== 'admin') return;
 
     const timer = setTimeout(async () => {
       setSyncStatus('syncing');
       try {
-        const storageType = localStorage.getItem('storageType') || 'gas';
         const payload = {
           originalData, subjectColumns,
           roomData, teacherList, assignmentData, mergedData, examSchedule, 
@@ -169,11 +149,7 @@ const MainApp = () => {
           anonymizationTeam, secretariatTeam, englishSpeakingAccounts, adminAccounts
         };
 
-        if (storageType === 'firebase') {
-          await saveToFirebase(payload);
-        } else {
-          await saveToGas(gasUrl, payload, 'sync');
-        }
+        await saveToFirebase(payload);
         setSyncStatus('saved');
         setTimeout(() => setSyncStatus('idle'), 3000);
       } catch (error) {
@@ -188,7 +164,7 @@ const MainApp = () => {
     roomData, teacherList, assignmentData, mergedData, examSchedule, 
     invigilationAssignments, markingSubjects, secretariatPairs, 
     exemptTeachers, invigilationConfig, schoolInfo, teacherConfig, 
-    anonymizationTeam, secretariatTeam, gasUrl, englishSpeakingAccounts, adminAccounts
+    anonymizationTeam, secretariatTeam, englishSpeakingAccounts, adminAccounts
   ]);
 
   useEffect(() => {
@@ -246,37 +222,29 @@ const MainApp = () => {
       if (Array.isArray(data.teacherList)) setTeacherList(data.teacherList);
       if (Array.isArray(data.roomData)) setRoomData(data.roomData);
 
-      if (gasUrl || localStorage.getItem('storageType') === 'firebase') {
-        try {
-          const storageType = localStorage.getItem('storageType') || 'gas';
-          const payload = {
-            originalData: data.originalData || [],
-            assignmentData: data.assignmentData || [],
-            mergedData: data.mergedData || [],
-            examSchedule: data.examSchedule || [],
-            invigilationAssignments: data.invigilationAssignments || [],
-            anonymizationTeam: data.anonymizationTeam || [],
-            secretariatTeam: data.secretariatTeam || [],
-            exemptTeachers: data.exemptTeachers || [],
-            secretariatPairs: data.secretariatPairs || [],
-            markingSubjects: data.markingSubjects || [],
-            teacherConfig: data.teacherConfig || [],
-            invigilationConfig: data.invigilationConfig || { invigilatorsPerRoom: 1 },
-            schoolInfo: data.schoolInfo || { authority: '', schoolName: '', principal: '', location: '', examName: '', schoolYear: '' },
-            englishSpeakingAccounts: data.englishSpeakingAccounts || [],
-            teacherList: data.teacherList || [],
-            roomData: data.roomData || []
-          };
-
-          if (storageType === 'firebase') {
-            await saveToFirebase(payload);
-          } else if (gasUrl) {
-            await saveToGas(gasUrl, payload, 'sync');
-          }
-        } catch (syncErr: any) {
-          console.error('Sync failed after restore:', syncErr);
-          alert('Phục hồi dữ liệu cục bộ thành công, nhưng đồng bộ lên Cloud thất bại: ' + syncErr.message);
-        }
+      try {
+        const payload = {
+          originalData: data.originalData || [],
+          assignmentData: data.assignmentData || [],
+          mergedData: data.mergedData || [],
+          examSchedule: data.examSchedule || [],
+          invigilationAssignments: data.invigilationAssignments || [],
+          anonymizationTeam: data.anonymizationTeam || [],
+          secretariatTeam: data.secretariatTeam || [],
+          exemptTeachers: data.exemptTeachers || [],
+          secretariatPairs: data.secretariatPairs || [],
+          markingSubjects: data.markingSubjects || [],
+          teacherConfig: data.teacherConfig || [],
+          invigilationConfig: data.invigilationConfig || { invigilatorsPerRoom: 1 },
+          schoolInfo: data.schoolInfo || { authority: '', schoolName: '', principal: '', location: '', examName: '', schoolYear: '' },
+          englishSpeakingAccounts: data.englishSpeakingAccounts || [],
+          teacherList: data.teacherList || [],
+          roomData: data.roomData || []
+        };
+        await saveToFirebase(payload);
+      } catch (syncErr: any) {
+        console.error('Sync failed after restore:', syncErr);
+        alert('Phục hồi dữ liệu cục bộ thành công, nhưng đồng bộ lên Cloud thất bại: ' + syncErr.message);
       }
 
       setShowRestoreModal(false);
@@ -369,23 +337,17 @@ const MainApp = () => {
     }
     setIsResetting(true);
     try {
-      if (gasUrl || localStorage.getItem('storageType') === 'firebase') {
-        const storageType = localStorage.getItem('storageType') || 'gas';
-        const emptyPayload = { 
-          originalData: [], assignmentData: [], mergedData: [], examSchedule: [],
-          invigilationAssignments: [], anonymizationTeam: [], secretariatTeam: [],
-          exemptTeachers: [], secretariatPairs: [], markingSubjects: [],
-          teacherList: [], roomData: [], teacherConfig: [],
-          invigilationConfig: { invigilatorsPerRoom: 1 },
-          schoolInfo: { authority: '', schoolName: '', principal: '', location: '', examName: '', schoolYear: '' }
-        };
+      const emptyPayload = { 
+        originalData: [], assignmentData: [], mergedData: [], examSchedule: [],
+        invigilationAssignments: [], anonymizationTeam: [], secretariatTeam: [],
+        exemptTeachers: [], secretariatPairs: [], markingSubjects: [],
+        teacherList: [], roomData: [], teacherConfig: [],
+        invigilationConfig: { invigilatorsPerRoom: 1 },
+        schoolInfo: { authority: '', schoolName: '', principal: '', location: '', examName: '', schoolYear: '' }
+      };
 
-        if (storageType === 'firebase') {
-          await saveToFirebase(emptyPayload);
-        } else if (gasUrl) {
-          await saveToGas(gasUrl, emptyPayload);
-        }
-      }
+      await saveToFirebase(emptyPayload);
+      
       setOriginalData([]); setAssignmentData([]); setMergedData([]); setSubjectColumns([]);
       setTeachers([]); setExamSchedule([]); setInvigilationAssignments([]); setAnonymizationTeam([]);
       setSecretariatTeam([]); setExemptTeachers([]); setSecretariatPairs([]); setMarkingSubjects([]);
@@ -489,14 +451,6 @@ const MainApp = () => {
               </div>
               <div 
                 className={cn("flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer font-bold text-sm text-[var(--color-text-body)] hover:bg-slate-50 hover:text-[var(--color-text-heading)]", !isSidebarOpen && "justify-center px-0")}
-                onClick={() => setIsGasModalOpen(true)}
-                title="Cấu hình Cloud GAS"
-              >
-                <Settings size={20} />
-                {isSidebarOpen && <span>Cấu hình GAS</span>}
-              </div>
-              <div 
-                className={cn("flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer font-bold text-sm text-[var(--color-text-body)] hover:bg-slate-50 hover:text-[var(--color-text-heading)]", !isSidebarOpen && "justify-center px-0")}
                 onClick={() => setIsFirebaseModalOpen(true)}
                 title="Cấu hình Firebase"
               >
@@ -530,10 +484,11 @@ const MainApp = () => {
         <header className="h-20 bg-white border-b border-border-soft px-4 lg:px-8 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2 lg:gap-4">
             <button 
-              onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 text-text-body hover:bg-slate-50 rounded-xl transition-colors"
+              onClick={() => setIsFirebaseModalOpen(true)}
+              className="w-12 h-12 flex items-center justify-center rounded-2xl bg-amber-50 text-amber-600 hover:bg-amber-100 transition-all group"
+              title="Cấu hình Firebase"
             >
-              <Menu size={24} />
+              <Database size={24} className="group-hover:scale-110 transition-transform" />
             </button>
             <h1 className="text-xl font-extrabold text-text-heading capitalize">
               {navItems.find(i => i.id === activeTab)?.label}
@@ -683,8 +638,7 @@ const MainApp = () => {
         </div>
       )}
 
-      <GasSetupModal isOpen={isGasModalOpen} onClose={() => setIsGasModalOpen(false)} gasUrl={gasUrl} setGasUrl={setGasUrl} />
-      <FirebaseSetupModal isOpen={isFirebaseModalOpen} onClose={() => setIsFirebaseModalOpen(false)} gasUrl={gasUrl} />
+      <FirebaseSetupModal isOpen={isFirebaseModalOpen} onClose={() => setIsFirebaseModalOpen(false)} gasUrl={localStorage.getItem('gasUrl') || ''} />
       <ConfigEnglishModal isOpen={isConfigEnglishModalOpen} onClose={() => setIsConfigEnglishModalOpen(false)} />
       <ChangePasswordModal isOpen={isChangePasswordModalOpen} onClose={() => setIsChangePasswordModalOpen(false)} />
     </div>

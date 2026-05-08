@@ -101,18 +101,28 @@ export const FirebaseSetupModal: React.FC<Props> = ({ isOpen, onClose, gasUrl })
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {Object.keys(config).map((key) => (
-              <div key={key} className="space-y-2">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{key}</label>
-                <input
-                  type="text"
-                  value={(config as any)[key]}
-                  onChange={(e) => setConfig({ ...config, [key]: e.target.value })}
-                  placeholder={`Nhập ${key}...`}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none"
-                />
+            {import.meta.env.VITE_FIREBASE_PROJECT_ID ? (
+              <div className="col-span-full p-4 bg-green-50 rounded-2xl border border-green-100 flex items-center gap-3">
+                <ShieldCheck className="text-green-600" size={24} />
+                <div>
+                  <p className="text-sm font-bold text-green-900">Cấu hình tự động đã kích hoạt</p>
+                  <p className="text-[11px] text-green-700">Ứng dụng đang sử dụng cấu hình Firebase từ Biến môi trường (Vercel/Build-time).</p>
+                </div>
               </div>
-            ))}
+            ) : (
+              Object.keys(config).map((key) => (
+                <div key={key} className="space-y-2">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{key}</label>
+                  <input
+                    type="text"
+                    value={(config as any)[key]}
+                    onChange={(e) => setConfig({ ...config, [key]: e.target.value })}
+                    placeholder={`Nhập ${key}...`}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none"
+                  />
+                </div>
+              ))
+            )}
           </div>
 
           <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 space-y-3">
