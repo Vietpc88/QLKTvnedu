@@ -73,14 +73,33 @@ const MainApp = () => {
 
     try {
       const data = await loadFromFirebase() || {};
-      console.log("Dữ liệu tải từ Firebase:", {
-        students: data.originalData?.length || 0,
-        scores: data.mergedData?.length || 0,
-        assignments: data.assignmentData?.length || 0
+      
+      // 1. Normalize originalData (Students)
+      const normalizedOriginal = (data.originalData || []).map((s: any) => ({
+        ...s,
+        fullName: s.fullName || s['Họ và tên'] || s.name || s.fullName,
+        className: s.className || s['Lớp'] || s.class || s.className,
+        room: s.room || s['Phòng thi'] || s.roomNumber || s.room
+      }));
+
+      // 2. Normalize assignmentData (Assignments)
+      const normalizedAssignments = (data.assignmentData || []).map((a: any) => ({
+        ...a,
+        grade: a.grade || a['Khối'] || a.level || a.grade,
+        subject: a.subject || a['Môn'] || a.sub || a.subject,
+        teacherName: a.teacherName || a['Giáo viên'] || a.teacher || a.teacherName,
+        bagCode: a.bagCode || a['Mã túi'] || a.code || a.bagCode,
+        room: a.room || a['Phòng'] || a.roomNumber || a.room,
+        phone: formatPhoneNumber(a.phone || a['SĐT'] || a.phone)
+      }));
+
+      console.log("Dữ liệu sau chuẩn hóa:", {
+        students: normalizedOriginal.length,
+        assignments: normalizedAssignments.length
       });
       
-      setOriginalData(data.originalData || []);
-      setAssignmentData(data.assignmentData || []);
+      setOriginalData(normalizedOriginal);
+      setAssignmentData(normalizedAssignments);
       setSubjectColumns(data.subjectColumns || []);
       setAdminAccounts(data.adminAccounts || []);
       setMergedData(data.mergedData || []);
@@ -97,7 +116,8 @@ const MainApp = () => {
       if (data.teacherList && data.teacherList.length > 0) {
         const normalizedList = data.teacherList.map((t: any) => ({
           ...t,
-          phone: formatPhoneNumber(t.phone)
+          name: t.name || t['Họ và tên'] || t.teacherName || t.name,
+          phone: formatPhoneNumber(t.phone || t['SĐT'] || t.phone)
         }));
         setTeacherList(normalizedList);
       }
@@ -108,25 +128,20 @@ const MainApp = () => {
         : (data.markingSubjects || []);
       setSubjectColumns(finalSubjects);
 
+      // Set teachers list for dropdowns
+      const tSet = new Set<string>();
       if (data.teacherList && data.teacherList.length > 0) {
-        setTeachers(data.teacherList.map((t: any) => String(t.name).trim()).sort());
+        data.teacherList.forEach((t: any) => tSet.add(String(t.name || t['Họ và tên'] || t.teacherName).trim()));
       } else {
-        const tSet = new Set<string>();
-        if (data.originalData) {
-          data.originalData.forEach((r: any) => {
-            if (r['giáo viên']) tSet.add(String(r['giáo viên']).trim());
-          });
-        }
-        if (data.assignmentData) {
-          const normalizedAssignments = data.assignmentData.map((a: any) => ({
-            ...a,
-            phone: formatPhoneNumber(a.phone)
-          }));
-          setAssignmentData(normalizedAssignments);
-          normalizedAssignments.forEach((a: any) => tSet.add(a.teacher));
-        }
-        setTeachers(Array.from(tSet).sort());
+        normalizedOriginal.forEach((r: any) => {
+          if (r['giáo viên']) tSet.add(String(r['giáo viên']).trim());
+        });
+        normalizedAssignments.forEach((a: any) => {
+          if (a.teacherName) tSet.add(String(a.teacherName).trim());
+        });
       }
+      setTeachers(Array.from(tSet).filter(t => t && t !== 'undefined').sort());
+      
     } catch (error: any) {
       console.error("Failed to load initial data from Firebase:", error);
       if (showLoading) alert(error.message);
