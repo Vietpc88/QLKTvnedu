@@ -10,6 +10,7 @@ interface Props {
 
 export const FirebaseSetupModal: React.FC<Props> = ({ isOpen, onClose, gasUrl }) => {
   const [isMigrating, setIsMigrating] = useState(false);
+  const [localGasUrl, setLocalGasUrl] = useState(gasUrl || localStorage.getItem('gasUrl') || '');
   const [config, setConfig] = useState({
     apiKey: '',
     authDomain: '',
@@ -40,8 +41,8 @@ export const FirebaseSetupModal: React.FC<Props> = ({ isOpen, onClose, gasUrl })
   };
 
   const handleMigrate = async () => {
-    if (!gasUrl) {
-      alert('Vui lòng cấu hình Google Apps Script URL trước khi di chuyển dữ liệu.');
+    if (!localGasUrl) {
+      alert('Vui lòng nhập Google Apps Script URL trước khi di chuyển dữ liệu.');
       return;
     }
     
@@ -51,8 +52,9 @@ export const FirebaseSetupModal: React.FC<Props> = ({ isOpen, onClose, gasUrl })
 
     setIsMigrating(true);
     try {
-      const result = await migrateDataToFirebase(gasUrl);
+      const result = await migrateDataToFirebase(localGasUrl);
       alert(result.message);
+      window.location.reload(); // Reload to fetch fresh data from Firebase
     } catch (error: any) {
       alert(error.message);
     } finally {
@@ -125,18 +127,33 @@ export const FirebaseSetupModal: React.FC<Props> = ({ isOpen, onClose, gasUrl })
             )}
           </div>
 
-          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 space-y-3">
+          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 space-y-4">
             <div className="flex items-center gap-3">
               <ArrowRightLeft className="text-amber-600" size={20} />
               <div>
                 <p className="text-sm font-bold text-amber-900">Di chuyển dữ liệu (Migration)</p>
-                <p className="text-[11px] text-amber-700">Tải tất cả các Sheet từ Google Sheets và lưu vào Firebase ngay bây giờ.</p>
+                <p className="text-[11px] text-amber-700">Tải dữ liệu từ Google Sheets cũ và đưa lên Firebase.</p>
               </div>
             </div>
+            
+            <div className="space-y-2">
+              <label className="block text-[10px] font-black text-amber-700 uppercase ml-1">Google Apps Script URL (Link WebApp cũ)</label>
+              <input
+                type="text"
+                value={localGasUrl}
+                onChange={(e) => {
+                  setLocalGasUrl(e.target.value);
+                  localStorage.setItem('gasUrl', e.target.value);
+                }}
+                placeholder="https://script.google.com/macros/s/.../exec"
+                className="w-full bg-white border border-amber-200 rounded-xl px-4 py-3 text-xs focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none"
+              />
+            </div>
+
             <button
               onClick={handleMigrate}
-              disabled={isMigrating}
-              className="w-full py-3 bg-white border border-amber-200 text-amber-700 rounded-xl font-bold text-sm hover:bg-amber-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              disabled={isMigrating || !localGasUrl}
+              className="w-full py-3 bg-amber-600 text-white rounded-xl font-bold text-sm hover:bg-amber-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-amber-600/20"
             >
               {isMigrating ? (
                 <RefreshCw size={16} className="animate-spin" />

@@ -136,7 +136,8 @@ const MainApp = () => {
   }, []);
 
   useEffect(() => {
-    if (isLoadingInitial || role !== 'admin') return;
+    // Safety check: Don't sync if data is suspiciously empty (prevents accidental overwriting of Cloud data)
+    if (isLoadingInitial || role !== 'admin' || originalData.length === 0) return;
 
     const timer = setTimeout(async () => {
       setSyncStatus('syncing');
