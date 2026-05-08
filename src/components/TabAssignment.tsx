@@ -60,6 +60,13 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
   const teacherInputRef = useRef<HTMLInputElement>(null);
   const roomInputRef = useRef<HTMLInputElement>(null);
 
+  // Auto-set teacher name for teacher role
+  React.useEffect(() => {
+    if (role === 'teacher' && loggedInTeacher) {
+      setTeacher(loggedInTeacher);
+    }
+  }, [role, loggedInTeacher]);
+
   const isAdmin = role === 'admin';
 
   const getRowKey = (row: any, index?: number) => {
@@ -769,28 +776,30 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
   const filteredAssignmentData = useMemo(() => {
     let data = assignmentData;
     
+    const normalizeCompare = (s: any) => String(s || '').trim().toLowerCase();
+
     // Auto-filter for teachers (Multi-user security/convenience)
     if (role === 'teacher' && loggedInTeacher) {
       data = data.filter(r => 
-        String(r.teacherName || r.teacher || '').trim() === String(loggedInTeacher).trim()
+        normalizeCompare(r.teacherName || r.teacher) === normalizeCompare(loggedInTeacher)
       );
     }
 
     if (filterGrade) {
-      data = data.filter(r => String(r.grade).trim() === String(filterGrade).trim());
+      data = data.filter(r => normalizeCompare(r.grade) === normalizeCompare(filterGrade));
     }
     if (filterSubject) {
-      data = data.filter(r => String(r.subject).trim() === String(filterSubject).trim());
+      data = data.filter(r => normalizeCompare(r.subject) === normalizeCompare(filterSubject));
     }
     if (filterTeacher && role === 'admin') {
-      data = data.filter(r => String(r.teacherName || r.teacher || '').trim() === String(filterTeacher).trim());
+      data = data.filter(r => normalizeCompare(r.teacherName || r.teacher) === normalizeCompare(filterTeacher));
     }
     if (filterStatus) {
       data = data.filter(r => (r.status || 'Chưa') === filterStatus);
     }
     if (packageSearch) {
       const pkgs = packageSearch.split(',').map(p => p.trim().toUpperCase()).filter(Boolean);
-      data = data.filter(r => pkgs.includes(String(r.package).trim().toUpperCase()));
+      data = data.filter(r => pkgs.includes(String(r.package || '').trim().toUpperCase()));
     }
     return data;
   }, [assignmentData, filterGrade, filterSubject, filterTeacher, filterStatus, packageSearch, role, loggedInTeacher]);
