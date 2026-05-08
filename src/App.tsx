@@ -31,7 +31,6 @@ const MainApp = () => {
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetPassword, setResetPassword] = useState('');
   const [isResetting, setIsResetting] = useState(false);
-  const [isLoadingInitial, setIsLoadingInitial] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [restoreFile, setRestoreFile] = useState<File | null>(null);
@@ -45,7 +44,7 @@ const MainApp = () => {
     originalData, setOriginalData, 
     assignmentData, setAssignmentData, 
     mergedData, setMergedData, 
-    setAdminAccounts, adminAccounts,
+    adminAccounts, setAdminAccounts,
     subjectColumns, setSubjectColumns, 
     teachers, setTeachers, 
     setCurrentFile, refreshTrigger,
@@ -57,16 +56,16 @@ const MainApp = () => {
     invigilationAssignments, setInvigilationAssignments,
     invigilationConfig, setInvigilationConfig,
     exemptTeachers, setExemptTeachers,
-    setOriginalData, setAssignmentData, setSubjectColumns,
-    setAdminAccounts, setMergedData, setEnglishSpeakingAccounts,
-    setTeacherConfig, setExamSchedule, setAnonymizationTeam,
-    setInvigilationConfig, setExemptTeachers, setSecretariatPairs,
-    setSchoolInfo, setMarkingSubjects, setTeacherList,
-    setRoomData, setTeachers, role, originalData, isLoadingInitial,
-    setIsLoadingInitial
+    secretariatPairs, setSecretariatPairs,
+    schoolInfo, setSchoolInfo,
+    englishSpeakingAccounts, setEnglishSpeakingAccounts,
+    loggedInTeacher, setLoggedInTeacher,
+    loggedInPhone, setLoggedInPhone,
+    teacherList, setTeacherList,
+    roomData, setRoomData,
+    role, setRole,
+    isLoadingInitial, setIsLoadingInitial
   } = useAppContext();
-
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchInitialData = async (showLoading = true) => {
     if (showLoading) setIsLoadingInitial(true);
