@@ -58,7 +58,7 @@ export const saveToFirebase = async (payload: any) => {
     const timestamp = new Date().toISOString();
 
     // 1. Handle regular categories
-    const mapping: any = {
+    const mapping: Record<string, string[]> = {
       students: ['originalData', 'subjectColumns', 'roomData'],
       auth: ['adminAccounts', 'teacherList', 'englishSpeakingAccounts'],
       config: [
