@@ -105,7 +105,10 @@ export const saveToFirebase = async (payload: any) => {
       }, { merge: true });
     }
 
-    return { status: 'success' };
+    return { 
+      status: 'success', 
+      message: 'Dữ liệu đã được lưu thành công vào Cloud Firebase.' 
+    };
   } catch (error: any) {
     console.error("Error saving to Firebase:", error);
     throw new Error(`Lỗi khi lưu lên Firebase: ${error.message}`);
