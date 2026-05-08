@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, getDocs } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, getDocs, onSnapshot, deleteDoc } from "firebase/firestore";
 
 // Function to get config from localStorage or environment
 const getFirebaseConfig = () => {
@@ -71,6 +71,8 @@ export const saveToFirebase = async (payload: any) => {
     };
 
     for (const [docId, keys] of Object.entries(mapping)) {
+      if (docId === 'assignments') continue; // Handle assignments separately below
+      
       const docData: any = { updatedAt: timestamp };
       let hasData = false;
       keys.forEach(key => {
@@ -84,11 +86,19 @@ export const saveToFirebase = async (payload: any) => {
       }
     }
 
-    // 2. Special handling for mergedData (Scores) to avoid 1MB limit
+    // 2. NEW: Atomic Assignments (One document per assignment to prevent overwriting)
+    if (cleanPayload.assignmentData && Array.isArray(cleanPayload.assignmentData)) {
+      for (const item of cleanPayload.assignmentData) {
+        if (!item.id) continue;
+        const assignmentDocRef = doc(db, COLLECTION_NAME, 'assignments', 'items', item.id);
+        await setDoc(assignmentDocRef, { ...item, updatedAt: timestamp }, { merge: true });
+      }
+    }
+
+    // 3. Special handling for mergedData (Scores) to avoid 1MB limit
     if (cleanPayload.mergedData && Array.isArray(cleanPayload.mergedData)) {
       const subjects = [...new Set(cleanPayload.mergedData.map((d: any) => d.subject))];
       
-      // Save each subject in a separate document
       for (const sub of subjects) {
         if (!sub) continue;
         const subData = cleanPayload.mergedData.filter((d: any) => d.subject === sub);
@@ -98,7 +108,6 @@ export const saveToFirebase = async (payload: any) => {
         }, { merge: true });
       }
 
-      // Save an index of subjects to know what to load
       await setDoc(doc(db, COLLECTION_NAME, 'scores_index'), { 
         subjects,
         updatedAt: timestamp 
@@ -122,8 +131,8 @@ export const loadFromFirebase = async () => {
   try {
     const results: any = {};
 
-    // 1. Load by categories (Optimized way)
-    const categories = ['students', 'assignments', 'auth', 'config', 'scores', 'mainData'];
+    // 1. Load by categories
+    const categories = ['students', 'auth', 'config', 'mainData'];
     for (const docId of categories) {
       const docSnap = await getDoc(doc(db, COLLECTION_NAME, docId));
       if (docSnap.exists()) {
@@ -131,7 +140,14 @@ export const loadFromFirebase = async () => {
       }
     }
 
-    // 2. Load split scores
+    // 2. Load Assignments from Sub-collection
+    const assignCol = collection(db, COLLECTION_NAME, 'assignments', 'items');
+    const assignSnap = await getDocs(assignCol);
+    const assignmentData: any[] = [];
+    assignSnap.forEach(doc => assignmentData.push(doc.data()));
+    results.assignmentData = assignmentData;
+
+    // 3. Load split scores
     const indexSnap = await getDoc(doc(db, COLLECTION_NAME, 'scores_index'));
     if (indexSnap.exists()) {
       const { subjects } = indexSnap.data();
@@ -148,7 +164,7 @@ export const loadFromFirebase = async () => {
       }
     }
 
-    // 3. EMERGENCY FALLBACK: Scan the entire collection if still missing critical data
+    // 4. EMERGENCY FALLBACK
     if (!results.originalData || results.originalData.length === 0) {
       console.log("Critical data missing, performing full collection scan...");
       const q = query(collection(db, COLLECTION_NAME));
@@ -158,21 +174,10 @@ export const loadFromFirebase = async () => {
       querySnapshot.forEach((doc) => {
         const docId = doc.id;
         const data = doc.data();
-        console.log(`Processing document: ${docId}`, Object.keys(data));
-        
-        // Merge anything that looks like our data
-        if (data.originalData) {
-          console.log(`Found originalData in ${docId}`);
-          results.originalData = data.originalData;
-        }
-        if (data.mergedData && (!results.mergedData || results.mergedData.length === 0)) {
-          console.log(`Found mergedData in ${docId}`);
-          results.mergedData = data.mergedData;
-        }
-        if (data.assignmentData) results.assignmentData = data.assignmentData;
+        if (data.originalData) results.originalData = data.originalData;
+        if (data.mergedData && (!results.mergedData || results.mergedData.length === 0)) results.mergedData = data.mergedData;
+        if (data.assignmentData && (!results.assignmentData || results.assignmentData.length === 0)) results.assignmentData = data.assignmentData;
         if (data.subjectColumns) results.subjectColumns = data.subjectColumns;
-        
-        // Merge top-level fields
         Object.assign(results, data);
       });
     }
@@ -181,6 +186,34 @@ export const loadFromFirebase = async () => {
   } catch (error: any) {
     console.error("Error loading from Firebase:", error);
     throw new Error(`Lỗi khi tải từ Firebase: ${error.message}`);
+  }
+};
+
+export const subscribeToAssignments = (callback: (data: any[]) => void) => {
+  if (!db) db = initFirebase();
+  if (!db) return () => {};
+
+  const q = collection(db, COLLECTION_NAME, 'assignments', 'items');
+  return onSnapshot(q, (snapshot) => {
+    const assignments: any[] = [];
+    snapshot.forEach((doc) => {
+      assignments.push(doc.data());
+    });
+    callback(assignments);
+  });
+};
+
+export const deleteAssignmentFromFirebase = async (assignmentId: string) => {
+  if (!db) db = initFirebase();
+  if (!db) throw new Error("Firebase chưa được cấu hình");
+  
+  try {
+    const { deleteDoc } = await import("firebase/firestore");
+    await deleteDoc(doc(db, COLLECTION_NAME, 'assignments', 'items', assignmentId));
+    return { status: 'success' };
+  } catch (error: any) {
+    console.error("Error deleting assignment:", error);
+    throw new Error(`Lỗi khi xóa phân công: ${error.message}`);
   }
 };
 
@@ -193,9 +226,13 @@ export const updateFieldInFirebase = async (field: string, value: any) => {
       return await saveToFirebase({ mergedData: value });
     }
 
+    if (field === 'assignmentData' && Array.isArray(value)) {
+      // For assignments, we can save atomics
+      return await saveToFirebase({ assignmentData: value });
+    }
+
     const mapping: any = {
       originalData: 'students', subjectColumns: 'students', roomData: 'students',
-      assignmentData: 'assignments',
       adminAccounts: 'auth', teacherList: 'auth', englishSpeakingAccounts: 'auth',
       examSchedule: 'config', markingSubjects: 'config', teacherConfig: 'config',
       invigilationConfig: 'config', schoolInfo: 'config', anonymizationTeam: 'config',

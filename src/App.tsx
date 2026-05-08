@@ -156,6 +156,25 @@ const MainApp = () => {
   }, []);
 
   useEffect(() => {
+    // 1. Subscribe to Assignments (Real-time multi-user support)
+    const unsubscribe = subscribeToAssignments((data) => {
+      // Normalize and set assignmentData
+      const normalizedAssignments = (data || []).map((a: any) => ({
+        ...a,
+        grade: a.grade || a['Khối'] || a.level || a.grade,
+        subject: a.subject || a['Môn'] || a.sub || a.subject,
+        teacherName: a.teacherName || a['Giáo viên'] || a.teacher || a.teacherName,
+        package: a.package || a.bagCode || a['Mã túi'] || a.code || a.package,
+        room: a.room || a['Phòng'] || a.roomNumber || a.room,
+        phone: formatPhoneNumber(a.phone || a['SĐT'] || a.phone)
+      }));
+      setAssignmentData(normalizedAssignments);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     // Safety check: Don't sync if data is suspiciously empty (prevents accidental overwriting of Cloud data)
     if (isLoadingInitial || role !== 'admin' || originalData.length === 0) return;
 
@@ -164,7 +183,7 @@ const MainApp = () => {
       try {
         const payload = {
           originalData, subjectColumns,
-          roomData, teacherList, assignmentData, mergedData, examSchedule, 
+          roomData, teacherList, mergedData, examSchedule, 
           invigilationAssignments, markingSubjects, secretariatPairs, 
           exemptTeachers, invigilationConfig, schoolInfo, teacherConfig, 
           anonymizationTeam, secretariatTeam, englishSpeakingAccounts, adminAccounts
@@ -182,7 +201,7 @@ const MainApp = () => {
     return () => clearTimeout(timer);
   }, [
     originalData, subjectColumns,
-    roomData, teacherList, assignmentData, mergedData, examSchedule, 
+    roomData, teacherList, mergedData, examSchedule, 
     invigilationAssignments, markingSubjects, secretariatPairs, 
     exemptTeachers, invigilationConfig, schoolInfo, teacherConfig, 
     anonymizationTeam, secretariatTeam, englishSpeakingAccounts, adminAccounts

@@ -4,6 +4,7 @@ import * as pdfMakeLib from "pdfmake/build/pdfmake";
 import * as pdfFonts from "pdfmake/build/vfs_fonts";
 import { useAppContext } from '../store';
 import { saveToGas, loadFromGas } from '../lib/gas';
+import { saveToFirebase, deleteAssignmentFromFirebase } from '../lib/firebase';
 import { Upload, Save, Download, Search, Trash2, AlertTriangle, Palette, RefreshCw, AlertCircle, CheckCircle2, XCircle, FileText, User, Calendar, FileUp, FileDown } from 'lucide-react';
 import { cn, formatPhoneNumber } from '../lib/utils';
 import { downloadTeacherTemplate, downloadRoomTemplate } from '../lib/templates';
@@ -373,14 +374,15 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
       }
 
       if (!phone) {
-        const existingTeacher = assignmentData.find(a => a.teacher === teacher);
-        phone = existingTeacher?.phone || '';
+        const existingAssignment = assignmentData.find(a => a.teacherName === teacher || a.teacher === teacher);
+        phone = existingAssignment?.phone || '';
       }
 
       const newAssignments = matches.map(m => ({
         grade,
         subject,
-        teacher,
+        teacherName: teacher,
+        teacher: teacher,
         phone,
         package: m.pkg,
         stt: String(m.stt).endsWith('.0') ? String(m.stt).slice(0, -2) : String(m.stt),
@@ -391,12 +393,8 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
         id: `${grade}-${subject}-${m.pkg}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
       }));
 
-      // Send directly to GAS
-      const response = await syncData(roomData, [...assignmentData, ...newAssignments], 'append', newAssignments);
-
-      // Reload data from server to get the absolute truth
-      const latestData = await loadFromGas(gasUrl);
-      setAssignmentData(latestData.assignmentData || []);
+      // Atomic Save to Firebase
+      const response = await saveToFirebase({ assignmentData: newAssignments });
 
       setPackages('');
 
@@ -422,7 +420,7 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
     }
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     if (selectedRows.size === 0) return;
 
     if (!showConfirmDelete) {
@@ -431,13 +429,34 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
       return;
     }
 
-    const newData = assignmentData.filter(row => !selectedRows.has(getRowKey(row)));
-    setAssignmentData(newData);
-    setSelectedRows(new Set());
-    setShowConfirmDelete(false);
-    // Use delete action with only the deleted rows
-    const deletedRows = assignmentData.filter(row => selectedRows.has(getRowKey(row)));
-    syncData(roomData, newData, 'delete', deletedRows);
+    setLoading(true);
+    try {
+      const keysToDelete = Array.from(selectedRows);
+      
+      for (const rowKey of keysToDelete) {
+        const rowToDelete = assignmentData.find(r => getRowKey(r) === rowKey);
+        if (rowToDelete && rowToDelete.id) {
+          await deleteAssignmentFromFirebase(rowToDelete.id);
+        }
+      }
+
+      setSelectedRows(new Set());
+      setShowConfirmDelete(false);
+      
+      setDialog({
+        type: 'success',
+        title: 'Đã xóa',
+        message: `Đã xóa ${keysToDelete.length} phân công khỏi Cloud Firebase.`
+      });
+    } catch (error: any) {
+      setDialog({
+        type: 'error',
+        title: 'Lỗi',
+        message: 'Không thể xóa: ' + error.message
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleColorize = () => {
