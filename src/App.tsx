@@ -154,13 +154,15 @@ const MainApp = () => {
   }, [gasUrl]);
 
   useEffect(() => {
-    if (!gasUrl || isLoadingInitial || role !== 'admin') return;
+    const storageType = localStorage.getItem('storageType') || 'gas';
+    if ((storageType === 'gas' && !gasUrl) || isLoadingInitial || role !== 'admin') return;
 
     const timer = setTimeout(async () => {
       setSyncStatus('syncing');
       try {
         const storageType = localStorage.getItem('storageType') || 'gas';
         const payload = {
+          originalData, subjectColumns,
           roomData, teacherList, assignmentData, mergedData, examSchedule, 
           invigilationAssignments, markingSubjects, secretariatPairs, 
           exemptTeachers, invigilationConfig, schoolInfo, teacherConfig, 
@@ -182,6 +184,7 @@ const MainApp = () => {
 
     return () => clearTimeout(timer);
   }, [
+    originalData, subjectColumns,
     roomData, teacherList, assignmentData, mergedData, examSchedule, 
     invigilationAssignments, markingSubjects, secretariatPairs, 
     exemptTeachers, invigilationConfig, schoolInfo, teacherConfig, 
