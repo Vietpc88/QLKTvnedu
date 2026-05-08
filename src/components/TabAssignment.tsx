@@ -1039,12 +1039,14 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
           {/* Main Toolbar - Compact Single Row */}
           <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
-              <span className={cn(
-                "px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-inner transition-all",
-                currentFile ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-emerald-50 text-emerald-600 border-emerald-100"
-              )}>
-                {currentFile ? `📁 ${currentFile}` : '🌐 TRỰC TUYẾN'}
-              </span>
+              {isAdmin && (
+                <span className={cn(
+                  "px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-inner transition-all",
+                  currentFile ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-emerald-50 text-emerald-600 border-emerald-100"
+                )}>
+                  {currentFile ? `📁 ${currentFile}` : '🌐 TRỰC TUYẾN'}
+                </span>
+              )}
               {isSyncing && (
                 <div className="flex items-center gap-1.5 text-blue-500 animate-pulse ml-2">
                   <RefreshCw size={12} className="animate-spin" />
@@ -1071,12 +1073,14 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
                   <div className="h-6 w-px bg-gray-200 mx-1" />
                 </>
               )}
-              <button
-                onClick={handleExportTemplate}
-                className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 text-gray-700 text-[10px] font-black uppercase tracking-tight rounded-lg hover:bg-slate-100 transition-all border border-gray-200"
-              >
-                <FileDown size={14} className="text-amber-500" /> Mẫu toàn bộ
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={handleExportTemplate}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 text-gray-700 text-[10px] font-black uppercase tracking-tight rounded-lg hover:bg-slate-100 transition-all border border-gray-200"
+                >
+                  <FileDown size={14} className="text-amber-500" /> Mẫu toàn bộ
+                </button>
+              )}
               {isAdmin && (
                 <button
                   onClick={onReset}
@@ -1155,27 +1159,33 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
           <div className="flex flex-wrap justify-between gap-4 mb-6 items-center shrink-0">
             <h3 className="text-lg font-extrabold text-text-heading">Danh sách Phân công</h3>
             <div className="flex flex-wrap gap-2">
-              <button onClick={handleColorize} className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-indigo-100 transition-all border border-indigo-100">
-                <Palette size={14} /> Tô màu
-              </button>
-              <button onClick={handleCheckMissing} className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-amber-100 transition-all border border-amber-100">
-                <AlertTriangle size={14} /> Kiểm tra sót
-              </button>
-              <div className="h-8 w-px bg-border-soft mx-1" />
-              <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-accent/10 text-accent-hover text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-accent/20 transition-all border border-accent/20">
-                <Download size={14} /> Xuất Excel
-              </button>
-              <button
-                onClick={handleDeleteSelected}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2 text-[11px] font-extrabold uppercase tracking-widest rounded-xl transition-all border",
-                  showConfirmDelete 
-                    ? "bg-rose-600 text-white border-rose-600 shadow-lg shadow-rose-200" 
-                    : "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
-                )}
-              >
-                <Trash2 size={14} /> {showConfirmDelete ? "Chắc chắn?" : "Xóa chọn"}
-              </button>
+              {isAdmin && (
+                <>
+                  <button onClick={handleColorize} className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-indigo-100 transition-all border border-indigo-100">
+                    <Palette size={14} /> Tô màu
+                  </button>
+                  <button onClick={handleCheckMissing} className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-amber-100 transition-all border border-amber-100">
+                    <AlertTriangle size={14} /> Kiểm tra sót
+                  </button>
+                  <div className="h-8 w-px bg-border-soft mx-1" />
+                  <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-accent/10 text-accent-hover text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-accent/20 transition-all border border-accent/20">
+                    <Download size={14} /> Xuất Excel
+                  </button>
+                </>
+              )}
+              {isAdmin && (
+                <button
+                  onClick={handleDeleteSelected}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 text-[11px] font-extrabold uppercase tracking-widest rounded-xl transition-all border",
+                    showConfirmDelete 
+                      ? "bg-rose-600 text-white border-rose-600 shadow-lg shadow-rose-200" 
+                      : "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
+                  )}
+                >
+                  <Trash2 size={14} /> {showConfirmDelete ? "Chắc chắn?" : "Xóa chọn"}
+                </button>
+              )}
             </div>
           </div>
 
@@ -1195,13 +1205,15 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
               <option value="" key="all-subjects">Tất cả môn</option>
               {subjectColumns.filter(Boolean).map(s => <option key={`filter-s-${s}`} value={s}>{s}</option>)}
             </select>
-            <select
-              value={filterTeacher} onChange={e => setFilterTeacher(e.target.value)}
-              className="bg-white border border-border-soft rounded-xl px-4 py-2 text-xs font-bold w-full sm:w-56 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
-            >
-              <option value="" key="all-teachers">Tất cả giáo viên</option>
-              {teachers.filter(Boolean).map(t => <option key={`filter-t-${t}`} value={t}>{t}</option>)}
-            </select>
+            {isAdmin && (
+              <select
+                value={filterTeacher} onChange={e => setFilterTeacher(e.target.value)}
+                className="bg-white border border-border-soft rounded-xl px-4 py-2 text-xs font-bold w-full sm:w-56 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
+              >
+                <option value="" key="all-teachers">Tất cả giáo viên</option>
+                {teachers.filter(Boolean).map(t => <option key={`filter-t-${t}`} value={t}>{t}</option>)}
+              </select>
+            )}
             <div className="relative flex-1 min-w-[240px] w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-body/30" size={16} />
               <input
