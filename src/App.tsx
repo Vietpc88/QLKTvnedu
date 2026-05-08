@@ -88,7 +88,7 @@ const MainApp = () => {
         grade: a.grade || a['Khối'] || a.level || a.grade,
         subject: a.subject || a['Môn'] || a.sub || a.subject,
         teacherName: a.teacherName || a['Giáo viên'] || a.teacher || a.teacherName,
-        bagCode: a.bagCode || a['Mã túi'] || a.code || a.bagCode,
+        package: a.package || a.bagCode || a['Mã túi'] || a.code || a.package,
         room: a.room || a['Phòng'] || a.roomNumber || a.room,
         phone: formatPhoneNumber(a.phone || a['SĐT'] || a.phone)
       }));

@@ -1191,11 +1191,13 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
                       checked={selectedRows.size === filteredAssignmentData.length && filteredAssignmentData.length > 0}
                     />
                   </th>
+                  <th className="px-4 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft text-center w-12">STT</th>
                   <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Khối</th>
                   <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Môn</th>
                   <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Giáo viên</th>
                   <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Mã túi</th>
                   <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Phòng</th>
+                  <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Thời gian</th>
                   <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft text-center">Trạng thái</th>
                 </tr>
               </thead>
@@ -1219,13 +1221,13 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
                         }}
                       />
                     </td>
-                    <td className="px-4 py-2 text-center font-medium text-gray-500">{i + 1}</td>
+                    <td className="px-4 py-2 text-center font-medium text-gray-400 w-12">{i + 1}</td>
                     <td className="px-4 py-2">{row.grade}</td>
                     <td className="px-4 py-2">{row.subject}</td>
-                    <td className="px-4 py-2 font-medium">{row.teacher}</td>
-                    <td className="px-4 py-2 font-bold">{row.package}</td>
-                    <td className="px-4 py-2">{row.room}</td>
-                    <td className="px-4 py-2 text-xs text-gray-600">{row.timestamp || ''}</td>
+                    <td className="px-4 py-2 font-medium">{row.teacherName || row.teacher}</td>
+                    <td className="px-4 py-2 font-bold text-blue-600">{row.package}</td>
+                    <td className="px-4 py-2 text-xs">{row.room}</td>
+                    <td className="px-4 py-2 text-[10px] text-gray-400">{row.timestamp || ''}</td>
                     <td className="px-4 py-2 text-center">
                       <select
                         value={row.status || 'Chưa'}
