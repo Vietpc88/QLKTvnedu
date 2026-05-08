@@ -1,0 +1,5 @@
+{
+  "name": "Tiện ích kiểm tra định kỳ vnEdu",
+  "description": "Phần mềm quản lý phân công chấm thi và gộp phách, hỗ trợ lưu trữ dữ liệu trên Google Sheets thông qua Google Apps Script.",
+  "requestFramePermissions": []
+}
