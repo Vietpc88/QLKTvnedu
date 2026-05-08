@@ -57,15 +57,16 @@ const MainApp = () => {
     invigilationAssignments, setInvigilationAssignments,
     invigilationConfig, setInvigilationConfig,
     exemptTeachers, setExemptTeachers,
-    secretariatPairs, setSecretariatPairs,
-    schoolInfo, setSchoolInfo,
-    englishSpeakingAccounts, setEnglishSpeakingAccounts,
-    loggedInTeacher, setLoggedInTeacher,
-    setLoggedInPhone,
-    teacherList, setTeacherList,
-    roomData, setRoomData,
-    role, setRole
+    setOriginalData, setAssignmentData, setSubjectColumns,
+    setAdminAccounts, setMergedData, setEnglishSpeakingAccounts,
+    setTeacherConfig, setExamSchedule, setAnonymizationTeam,
+    setInvigilationConfig, setExemptTeachers, setSecretariatPairs,
+    setSchoolInfo, setMarkingSubjects, setTeacherList,
+    setRoomData, setTeachers, role, originalData, isLoadingInitial,
+    setIsLoadingInitial
   } = useAppContext();
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchInitialData = async (showLoading = true) => {
     if (showLoading) setIsLoadingInitial(true);

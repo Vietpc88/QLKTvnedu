@@ -147,4 +147,6 @@ export interface AppState {
   setLoggedInPhone: (phone: string | null) => void;
   role: 'admin' | 'teacher' | 'speaking_teacher' | null;
   setRole: (role: 'admin' | 'teacher' | 'speaking_teacher' | null) => void;
+  isLoadingInitial: boolean;
+  setIsLoadingInitial: (loading: boolean) => void;
 }

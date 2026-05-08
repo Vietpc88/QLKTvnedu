@@ -117,6 +117,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return (saved as 'admin' | 'teacher' | null) || null;
   });
 
+  const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+
   const refreshData = async (showLoading: boolean = false) => {
     setRefreshTrigger(prev => prev + 1);
   };
@@ -223,7 +225,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       loggedInPhone, setLoggedInPhone,
       teacherList, setTeacherList,
       roomData, setRoomData,
-      role, setRole
+      role, setRole,
+      isLoadingInitial, setIsLoadingInitial
     }}>
       {children}
     </AppContext.Provider>

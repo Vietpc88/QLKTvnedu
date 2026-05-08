@@ -35,7 +35,7 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
     teachers, setTeachers,
     teacherList, setTeacherList,
     gasUrl, currentFile, setCurrentFile,
-    role, setMergedData
+    role, setMergedData, isLoadingInitial
   } = useAppContext();
 
   const [loading, setLoading] = useState(false);
@@ -1103,10 +1103,13 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
             </div>
             <button
               onClick={handleAssign}
-              disabled={loading}
-              className="flex items-center justify-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl transition-all active:scale-95 font-black uppercase tracking-widest text-[11px] hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/20 h-[46px] shadow-md shadow-blue-500/10"
+              disabled={loading || isLoadingInitial}
+              className={cn(
+                "flex items-center justify-center gap-2 px-8 py-3 text-white rounded-xl transition-all active:scale-95 font-black uppercase tracking-widest text-[11px] h-[46px] shadow-md",
+                (loading || isLoadingInitial) ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/20 shadow-blue-500/10"
+              )}
             >
-              {loading ? 'ĐANG XỬ LÝ' : 'PHÂN CÔNG'}
+              {isLoadingInitial ? 'ĐANG TẢI DỮ LIỆU...' : (loading ? 'ĐANG XỬ LÝ...' : 'PHÂN CÔNG')}
             </button>
           </div>
         </div>
