@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Database, ShieldCheck, AlertCircle } from 'lucide-react';
+import { X, Save, Database, ShieldCheck, AlertCircle, RefreshCw, ArrowRightLeft } from 'lucide-react';
+import { migrateDataToFirebase } from '../lib/gas';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  gasUrl: string;
 }
 
-export const FirebaseSetupModal: React.FC<Props> = ({ isOpen, onClose }) => {
+export const FirebaseSetupModal: React.FC<Props> = ({ isOpen, onClose, gasUrl }) => {
+  const [isMigrating, setIsMigrating] = useState(false);
   const [config, setConfig] = useState({
     apiKey: '',
     authDomain: '',
@@ -34,6 +37,27 @@ export const FirebaseSetupModal: React.FC<Props> = ({ isOpen, onClose }) => {
     localStorage.setItem('storageType', useFirebase ? 'firebase' : 'gas');
     alert('Đã lưu cấu hình Firebase. Ứng dụng sẽ tải lại để áp dụng thay đổi.');
     window.location.reload();
+  };
+
+  const handleMigrate = async () => {
+    if (!gasUrl) {
+      alert('Vui lòng cấu hình Google Apps Script URL trước khi di chuyển dữ liệu.');
+      return;
+    }
+    
+    if (!window.confirm('Hệ thống sẽ tải toàn bộ dữ liệu từ Google Sheets và ghi đè lên Firebase. Bạn có chắc chắn muốn tiếp tục?')) {
+      return;
+    }
+
+    setIsMigrating(true);
+    try {
+      const result = await migrateDataToFirebase(gasUrl);
+      alert(result.message);
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setIsMigrating(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -89,6 +113,28 @@ export const FirebaseSetupModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 />
               </div>
             ))}
+          </div>
+
+          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 space-y-3">
+            <div className="flex items-center gap-3">
+              <ArrowRightLeft className="text-amber-600" size={20} />
+              <div>
+                <p className="text-sm font-bold text-amber-900">Di chuyển dữ liệu (Migration)</p>
+                <p className="text-[11px] text-amber-700">Tải tất cả các Sheet từ Google Sheets và lưu vào Firebase ngay bây giờ.</p>
+              </div>
+            </div>
+            <button
+              onClick={handleMigrate}
+              disabled={isMigrating}
+              className="w-full py-3 bg-white border border-amber-200 text-amber-700 rounded-xl font-bold text-sm hover:bg-amber-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {isMigrating ? (
+                <RefreshCw size={16} className="animate-spin" />
+              ) : (
+                <Database size={16} />
+              )}
+              {isMigrating ? 'Đang di chuyển dữ liệu...' : 'Bắt đầu di chuyển từ Google Sheets'}
+            </button>
           </div>
 
           <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex gap-3">

@@ -371,3 +371,18 @@ export const loadFromGas = async (gasUrl: string) => {
     throw new Error(`Lỗi khi tải dữ liệu: ${error.message}`);
   }
 };
+
+export const migrateDataToFirebase = async (gasUrl: string) => {
+  try {
+    // 1. Load everything from GAS
+    const data = await loadFromGas(gasUrl);
+    
+    // 2. Save everything to Firebase
+    await saveToFirebase(data);
+    
+    return { status: 'success', message: 'Di chuyển dữ liệu thành công!' };
+  } catch (error: any) {
+    console.error("Migration failed:", error);
+    throw new Error(`Di chuyển thất bại: ${error.message}`);
+  }
+};

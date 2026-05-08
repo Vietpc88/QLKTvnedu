@@ -684,7 +684,7 @@ const MainApp = () => {
       )}
 
       <GasSetupModal isOpen={isGasModalOpen} onClose={() => setIsGasModalOpen(false)} gasUrl={gasUrl} setGasUrl={setGasUrl} />
-      <FirebaseSetupModal isOpen={isFirebaseModalOpen} onClose={() => setIsFirebaseModalOpen(false)} />
+      <FirebaseSetupModal isOpen={isFirebaseModalOpen} onClose={() => setIsFirebaseModalOpen(false)} gasUrl={gasUrl} />
       <ConfigEnglishModal isOpen={isConfigEnglishModalOpen} onClose={() => setIsConfigEnglishModalOpen(false)} />
       <ChangePasswordModal isOpen={isChangePasswordModalOpen} onClose={() => setIsChangePasswordModalOpen(false)} />
     </div>
