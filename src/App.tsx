@@ -571,11 +571,11 @@ const MainApp = () => {
         </header>
 
         {/* Content Container - Optimized Padding for Mobile */}
-        <div className="flex-1 overflow-hidden p-3 lg:p-8 flex flex-col min-h-0 bg-bg-main pb-24 lg:pb-8">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 lg:p-8 flex flex-col min-h-0 bg-bg-main pb-24 lg:pb-8">
           {/* Dynamic Content Card */}
-          <div className="flex-1 overflow-hidden flex flex-col bg-white lg:border border-gray-100 shadow-sm lg:shadow-[var(--shadow-card)] rounded-2xl lg:transition-all">
+          <div className="flex-1 flex flex-col bg-white lg:border border-gray-100 shadow-sm lg:shadow-[var(--shadow-card)] rounded-2xl lg:transition-all">
             {isLoadingInitial ? (
-              <div className="flex-1 flex flex-col items-center justify-center gap-6">
+              <div className="flex-1 flex flex-col items-center justify-center gap-6 py-20">
                 <div className="relative">
                   <div className="w-16 h-16 border-4 border-primary/10 border-t-primary rounded-full animate-spin"></div>
                   <RefreshCw size={24} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary" />
@@ -586,7 +586,7 @@ const MainApp = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex-1 overflow-hidden flex flex-col p-3 lg:p-6">
+              <div className="flex-1 flex flex-col p-3 lg:p-6">
                 {role === 'speaking_teacher' ? (
                   <TabSpeakingGrade />
                 ) : (

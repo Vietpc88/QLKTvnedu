@@ -769,10 +769,10 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
 
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 h-full lg:min-h-0 overflow-y-auto lg:overflow-hidden">
+    <div className="flex flex-col lg:flex-row gap-4 w-full">
       {/* Left Panel: Original Data / Teacher List */}
       {sidePanelType !== null && (
-        <div className="w-full lg:w-1/3 flex flex-col border border-gray-200 rounded-lg bg-white lg:overflow-hidden min-h-[400px] lg:min-h-0 shrink-0 lg:shrink shadow-sm">
+        <div className="w-full lg:w-1/3 flex flex-col border border-gray-200 rounded-lg bg-white min-h-[400px] shadow-sm">
           <div className="p-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 shrink-0 flex justify-between items-center">
             <span className="flex items-center gap-2">
               {sidePanelType === 'room' && '📂 DỮ LIỆU GỐC (DS PHÒNG THI)'}
@@ -785,8 +785,8 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
               <Trash2 size={16} />
             </button>
           </div>
-          <div className="flex-1 overflow-auto min-h-0">
-            <div className="min-w-full inline-block align-middle overflow-x-auto">
+          <div className="flex-1 w-full overflow-x-auto">
+            <div className="min-w-full inline-block align-middle">
               <table className="w-full text-sm text-left border-collapse">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0 z-20">
                   <tr>
@@ -842,8 +842,8 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
 
       {/* Right Panel: Controls & Results */}
       <div className={cn(
-        "flex flex-col gap-4 shrink-0 lg:shrink lg:min-h-0",
-        sidePanelType !== null ? "w-full lg:w-2/3" : "w-full"
+        "flex flex-col gap-4 w-full",
+        sidePanelType !== null ? "lg:w-2/3" : "w-full"
       )}>
 
 
@@ -936,7 +936,7 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
         </div>
 
         {/* Results Card */}
-        <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl transition-all p-5 flex flex-col flex-1 lg:overflow-hidden min-h-[400px] lg:min-h-0">
+        <div className="bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl transition-all p-5 flex flex-col min-h-[400px]">
           <div className="flex flex-wrap justify-between gap-4 mb-6 items-center shrink-0">
             <h3 className="text-lg font-extrabold text-text-heading">Danh sách Phân công</h3>
             <div className="flex flex-wrap gap-2">
@@ -1030,7 +1030,7 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
             </div>
           </div>
 
-          <div className="flex-1 overflow-auto border border-border-soft rounded-2xl min-h-0 bg-white">
+          <div className="w-full overflow-x-auto border border-border-soft rounded-2xl bg-white">
             <table className="w-full text-sm text-left border-separate border-spacing-0">
               <thead className="sticky top-0 z-10 bg-white">
                 <tr>

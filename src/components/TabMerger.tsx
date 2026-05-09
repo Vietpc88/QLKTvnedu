@@ -504,7 +504,7 @@ export const TabMerger: React.FC = () => {
   }, [mergedData, subject]);
 
   return (
-    <div className="flex flex-col gap-4 h-full min-h-0">
+    <div className="flex flex-col gap-4 w-full">
       {/* Top Config */}
       <div className="border border-gray-200 rounded-lg bg-white p-4 shrink-0">
         <h3 className="font-semibold text-blue-700 mb-3">1. Nhập liệu & Cấu hình</h3>
@@ -614,10 +614,10 @@ export const TabMerger: React.FC = () => {
       </div>
 
       {/* Tables Splitter */}
-      <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 lg:overflow-hidden">
+      <div className="flex flex-col lg:flex-row gap-4 w-full">
         {/* Merged Data Table */}
         {showMergedData && (
-          <div className="w-full lg:w-1/2 flex flex-col border border-gray-200 rounded-lg bg-white min-h-[400px] lg:min-h-0 lg:overflow-hidden">
+          <div className="w-full lg:w-1/2 flex flex-col border border-gray-200 rounded-lg bg-white min-h-[400px]">
             <div className="p-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center shrink-0">
               <span className="font-semibold text-gray-700">Dữ liệu đã ghép (Tổng hợp)</span>
               <button 
@@ -628,7 +628,7 @@ export const TabMerger: React.FC = () => {
                 <FileText size={14} /> Xuất PDF Nhập điểm
               </button>
             </div>
-            <div className="flex-1 overflow-auto min-h-0">
+            <div className="w-full overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0">
                   <tr>
@@ -668,7 +668,7 @@ export const TabMerger: React.FC = () => {
 
         {/* Search Results Table */}
         <div className={cn(
-          "flex flex-col border border-gray-200 rounded-lg bg-white min-h-[400px] lg:min-h-0 lg:overflow-hidden",
+          "flex flex-col border border-gray-200 rounded-lg bg-white min-h-[400px]",
           showMergedData ? "w-full lg:w-1/2" : "w-full"
         )}>
           <div className="p-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center shrink-0">
@@ -681,7 +681,7 @@ export const TabMerger: React.FC = () => {
               <Download size={14} /> Xuất Excel
             </button>
           </div>
-          <div className="flex-1 overflow-auto min-h-0">
+          <div className="w-full overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0">
                 <tr>
