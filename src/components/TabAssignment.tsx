@@ -867,28 +867,28 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
           </div>
 
           {/* Assignment Form */}
-          <div className="flex flex-wrap items-end gap-4 pt-4">
-            <div className="w-28">
+          <div className="flex flex-col lg:flex-row lg:items-end gap-4 pt-4">
+            <div className="w-full lg:w-28">
               <label className="block text-[10px] text-gray-500 font-extrabold mb-1.5 uppercase tracking-widest">Khối</label>
               <select
                 value={grade} onChange={e => setGrade(e.target.value)}
-                className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
+                className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 lg:py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
               >
                 <option value="" key="default">-- Khối --</option>
                 {grades.map(g => <option key={g} value={g}>{g}</option>)}
               </select>
             </div>
-            <div className="w-40">
+            <div className="w-full lg:w-40">
               <label className="block text-[10px] text-text-body font-extrabold mb-1.5 uppercase tracking-widest opacity-60">Môn</label>
               <select
                 value={subject} onChange={e => setSubject(e.target.value)}
-                className="w-full bg-slate-50 border border-border-soft rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
+                className="w-full bg-slate-50 border border-border-soft rounded-xl px-4 py-3 lg:py-2.5 text-sm font-bold focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
               >
                 <option value="" key="default">-- Chọn môn --</option>
                 {subjectColumns.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
-            <div className="flex-1 min-w-[200px]">
+            <div className="w-full lg:flex-1 lg:min-w-[200px]">
               <label className="block text-[10px] text-text-body font-extrabold mb-1.5 uppercase tracking-widest opacity-60">Giáo viên</label>
               <input
                 type="text"
@@ -901,29 +901,29 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
                     setTeacher('');
                   }
                 }}
-                className="w-full bg-slate-50 border border-border-soft rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
+                className="w-full bg-slate-50 border border-border-soft rounded-xl px-4 py-3 lg:py-2.5 text-sm font-bold focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
               />
               <datalist id="teacher-list">
                 {teachers.filter(Boolean).map(t => <option key={`dl-${t}`} value={t} />)}
               </datalist>
             </div>
-            <div className="flex-2 min-w-[280px]">
+            <div className="w-full lg:flex-[2] lg:min-w-[280px]">
               <label className="block text-[10px] text-text-body font-extrabold mb-1.5 uppercase tracking-widest opacity-60">Mã túi (DKZ, YBK...)</label>
               <input
                 type="text" placeholder="Nhập mã túi thi..."
                 value={packages} onChange={e => setPackages(e.target.value)}
-                className="w-full bg-slate-50 border border-border-soft rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
+                className="w-full bg-slate-50 border border-border-soft rounded-xl px-4 py-3 lg:py-2.5 text-sm font-bold focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
               />
             </div>
             <button
               onClick={handleAssign}
               disabled={loading || isLoadingInitial}
               className={cn(
-                "flex items-center justify-center gap-2 px-8 py-3 text-white rounded-xl transition-all active:scale-95 font-black uppercase tracking-widest text-[11px] h-[46px] shadow-md",
+                "w-full lg:w-auto flex items-center justify-center gap-2 px-8 py-3.5 lg:py-3 text-white rounded-xl transition-all active:scale-95 font-black uppercase tracking-widest text-[11px] h-[52px] lg:h-[46px] shadow-md mt-2 lg:mt-0",
                 (loading || isLoadingInitial) ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/20 shadow-blue-500/10"
               )}
             >
-              {isLoadingInitial ? 'ĐANG TẢI DỮ LIỆU...' : (loading ? 'ĐANG XỬ LÝ...' : 'PHÂN CÔNG')}
+              {isLoadingInitial ? 'ĐANG TẢI...' : (loading ? 'ĐANG XỬ LÝ...' : 'PHÂN CÔNG')}
             </button>
           </div>
         </div>
@@ -980,18 +980,18 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 mb-6 shrink-0 bg-slate-50 p-4 rounded-xl border border-border-soft">
-            <span className="text-xs font-extrabold text-text-body uppercase tracking-[0.2em] opacity-40 ml-1">Lọc nhanh:</span>
+          <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-6 shrink-0 bg-slate-50 p-4 rounded-xl border border-border-soft">
+            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest hidden lg:block">LỌC NHANH:</span>
             <select
               value={filterGrade} onChange={e => setFilterGrade(e.target.value)}
-              className="bg-white border border-border-soft rounded-xl px-4 py-2 text-xs font-bold w-full sm:w-32 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
+              className="bg-white border border-border-soft rounded-xl px-4 py-3 lg:py-2 text-xs font-bold w-full lg:w-32 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
             >
               <option value="" key="all-grades">Tất cả khối</option>
               {grades.filter(Boolean).map(g => <option key={`filter-g-${g}`} value={g}>{g}</option>)}
             </select>
             <select
               value={filterSubject} onChange={e => setFilterSubject(e.target.value)}
-              className="bg-white border border-border-soft rounded-xl px-4 py-2 text-xs font-bold w-full sm:w-40 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
+              className="bg-white border border-border-soft rounded-xl px-4 py-3 lg:py-2 text-xs font-bold w-full lg:w-40 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
             >
               <option value="" key="all-subjects">Tất cả môn</option>
               {subjectColumns.filter(Boolean).map(s => <option key={`filter-s-${s}`} value={s}>{s}</option>)}
@@ -999,7 +999,7 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
             {isAdmin && (
               <select
                 value={filterTeacher} onChange={e => setFilterTeacher(e.target.value)}
-                className="bg-white border border-border-soft rounded-xl px-4 py-2 text-xs font-bold w-full sm:w-48 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
+                className="bg-white border border-border-soft rounded-xl px-4 py-3 lg:py-2 text-xs font-bold w-full lg:w-48 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
               >
                 <option value="" key="all-teachers">Tất cả giáo viên</option>
                 {teachers.filter(Boolean).map(t => <option key={`filter-t-${t}`} value={t}>{t}</option>)}
@@ -1007,18 +1007,18 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
             )}
             <select
               value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-              className="bg-white border border-border-soft rounded-xl px-4 py-2 text-xs font-bold w-full sm:w-36 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
+              className="bg-white border border-border-soft rounded-xl px-4 py-3 lg:py-2 text-xs font-bold w-full lg:w-36 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
             >
               <option value="">Tất cả trạng thái</option>
               <option value="Chưa">Chưa xong</option>
               <option value="Xong">Đã xong</option>
             </select>
-            <div className="relative flex-1 min-w-[240px] w-full">
+            <div className="relative flex-1 min-w-[240px] w-full mt-2 lg:mt-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-body/30" size={16} />
               <input
                 type="text" placeholder="Tìm mã túi..."
                 value={packageSearch} onChange={e => setPackageSearch(e.target.value)}
-                className="w-full bg-white border border-border-soft rounded-xl pl-10 pr-4 py-2 text-xs font-bold focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
+                className="w-full bg-white border border-border-soft rounded-xl pl-10 pr-4 py-3 lg:py-2 text-xs font-bold focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
               />
             </div>
           </div>

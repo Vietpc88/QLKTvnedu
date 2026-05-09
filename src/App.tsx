@@ -431,19 +431,10 @@ const MainApp = () => {
 
   return (
     <div className="h-screen bg-bg-main flex overflow-hidden font-manrope">
-      {/* Mobile Backdrop */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[45] lg:hidden animate-in fade-in duration-300"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* Snov.io Inspired Sidebar */}
+      {/* Snov.io Inspired Sidebar - Hidden on Mobile */}
       <aside className={cn(
-        "bg-white border-r border-border-soft flex flex-col transition-all duration-300 z-50 shrink-0",
-        "fixed inset-y-0 left-0 lg:relative",
-        isSidebarOpen ? "w-[280px] translate-x-0" : "w-[280px] -translate-x-full lg:w-[80px] lg:translate-x-0"
+        "hidden lg:flex bg-white border-r border-border-soft flex-col transition-all duration-300 z-50 shrink-0",
+        isSidebarOpen ? "w-[280px]" : "w-[80px]"
       )}>
         <div className="p-6 flex items-center gap-3">
           <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 shrink-0">
@@ -529,20 +520,20 @@ const MainApp = () => {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 h-full relative">
         {/* Modern Header */}
-        <header className="h-20 bg-white border-b border-border-soft px-4 lg:px-8 flex items-center justify-between shrink-0">
+        <header className="h-16 lg:h-20 bg-white border-b border-border-soft px-4 lg:px-8 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2 lg:gap-4">
             <button 
               onClick={() => setIsFirebaseModalOpen(true)}
-              className="w-12 h-12 flex items-center justify-center rounded-2xl bg-amber-50 text-amber-600 hover:bg-amber-100 transition-all group"
+              className="w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-2xl bg-amber-50 text-amber-600 hover:bg-amber-100 transition-all group"
               title="Cấu hình Firebase"
             >
-              <Database size={24} className="group-hover:scale-110 transition-transform" />
+              <Database size={20} className="group-hover:scale-110 transition-transform lg:w-6 lg:h-6" />
             </button>
-            <h1 className="text-xl font-extrabold text-text-heading capitalize">
+            <h1 className="text-lg lg:text-xl font-extrabold text-text-heading capitalize">
               {navItems.find(i => i.id === activeTab)?.label}
             </h1>
             {role === 'admin' && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-slate-50 border border-border-soft rounded-full">
+              <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-slate-50 border border-border-soft rounded-full">
                 <div className={cn(
                   "w-2 h-2 rounded-full",
                   syncStatus === 'syncing' ? "bg-amber-500 animate-pulse" :
@@ -557,7 +548,7 @@ const MainApp = () => {
             )}
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 lg:gap-6">
             <div className="flex items-center gap-2">
               <button className="p-2 text-text-body hover:bg-slate-50 rounded-xl transition-colors relative">
                 <Bell size={20} />
@@ -565,26 +556,24 @@ const MainApp = () => {
               </button>
             </div>
             
-            <div className="h-8 w-px bg-border-soft" />
+            <div className="hidden lg:block h-8 w-px bg-border-soft" />
 
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-bold text-text-heading leading-tight">{role === 'admin' ? 'Quản trị viên' : loggedInTeacher}</p>
                 <p className="text-[10px] text-text-body font-medium uppercase tracking-widest">{role}</p>
               </div>
-              <div className="w-10 h-10 rounded-xl overflow-hidden bg-primary-light flex items-center justify-center text-primary font-black shadow-inner border border-primary/10">
-                <User size={24} />
+              <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl overflow-hidden bg-primary-light flex items-center justify-center text-primary font-black shadow-inner border border-primary/10">
+                <User size={20} className="lg:w-6 lg:h-6" />
               </div>
             </div>
           </div>
         </header>
 
-        {/* Content Container */}
-        <div className="flex-1 overflow-hidden p-8 flex flex-col min-h-0 bg-bg-main">
-          {/* Action Toolbar removed per user request to hide it from all tabs */}
-
+        {/* Content Container - Optimized Padding for Mobile */}
+        <div className="flex-1 overflow-hidden p-3 lg:p-8 flex flex-col min-h-0 bg-bg-main pb-24 lg:pb-8">
           {/* Dynamic Content Card */}
-          <div className="flex-1 overflow-hidden flex flex-col bg-white border border-gray-100 shadow-[var(--shadow-card)] rounded-2xl transition-all overflow-hidden">
+          <div className="flex-1 overflow-hidden flex flex-col bg-white lg:border border-gray-100 shadow-sm lg:shadow-[var(--shadow-card)] rounded-2xl lg:transition-all">
             {isLoadingInitial ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-6">
                 <div className="relative">
@@ -597,7 +586,7 @@ const MainApp = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex-1 overflow-hidden flex flex-col p-6">
+              <div className="flex-1 overflow-hidden flex flex-col p-3 lg:p-6">
                 {role === 'speaking_teacher' ? (
                   <TabSpeakingGrade />
                 ) : (
@@ -627,6 +616,46 @@ const MainApp = () => {
           </div>
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center p-2 pb-safe z-[60] shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+        {navItems.filter(item => item.roles.includes(role || '')).map((item: any) => {
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={cn(
+                "flex flex-col items-center justify-center w-16 h-14 rounded-2xl transition-all",
+                isActive ? "text-blue-600" : "text-gray-400 hover:text-gray-600"
+              )}
+            >
+              <div className={cn(
+                "p-1.5 rounded-xl transition-all mb-1",
+                isActive ? "bg-blue-50 text-blue-600" : "bg-transparent text-gray-500"
+              )}>
+                <item.icon size={20} className={isActive ? "scale-110 transition-transform" : ""} />
+              </div>
+              <span className={cn(
+                "text-[9px] font-extrabold uppercase tracking-tight truncate w-full text-center transition-colors",
+                isActive ? "text-blue-600" : "text-gray-500"
+              )}>
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+        {/* Mobile Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="flex flex-col items-center justify-center w-16 h-14 rounded-2xl transition-all text-rose-400 hover:text-rose-600"
+        >
+          <div className="p-1.5 rounded-xl transition-all mb-1 bg-transparent">
+            <LogOut size={20} />
+          </div>
+          <span className="text-[9px] font-extrabold uppercase tracking-tight truncate w-full text-center">Thoát</span>
+        </button>
+      </nav>
 
       {/* Modals */}
       {showResetModal && (
