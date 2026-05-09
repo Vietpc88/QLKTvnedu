@@ -7,6 +7,7 @@ import { TabInvigilation } from './components/TabInvigilation';
 import { TabSpeakingGrade } from './components/TabSpeakingGrade';
 import { TabSpeakingReport } from './components/TabSpeakingReport';
 import { TabStatistics } from './components/TabStatistics';
+import { TabConfig } from './components/TabConfig';
 import { GasSetupModal } from './components/GasSetupModal';
 import { ConfigEnglishModal } from './components/ConfigEnglishModal';
 import { SplashScreen } from './components/SplashScreen';
@@ -24,7 +25,7 @@ import { FirebaseSetupModal } from './components/FirebaseSetupModal';
 import { Database } from 'lucide-react';
 
 const MainApp = () => {
-  const [activeTab, setActiveTab] = useState<'assignment' | 'merger' | 'invigilation' | 'speaking_report'>('assignment');
+  const [activeTab, setActiveTab] = useState<'assignment' | 'merger' | 'invigilation' | 'speaking_report' | 'config'>('assignment');
   const [isFirebaseModalOpen, setIsFirebaseModalOpen] = useState(false);
   const [isConfigEnglishModalOpen, setIsConfigEnglishModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
@@ -425,6 +426,7 @@ const MainApp = () => {
     { id: 'merger', label: 'Ghép phách', icon: LayoutDashboard, roles: ['admin'] },
     { id: 'invigilation', label: 'Coi thi & Chấm thi', icon: Calendar, roles: ['admin'] },
     { id: 'speaking_report', label: 'Điểm Nói', icon: Mic, roles: ['admin'] },
+    { id: 'config', label: 'Cấu hình', icon: Settings, roles: ['admin'] },
   ];
 
   return (
@@ -610,7 +612,8 @@ const MainApp = () => {
                     {activeTab === 'statistics' && <TabStatistics />}
                     {activeTab === 'merger' && <TabMerger />}
                     {activeTab === 'invigilation' && <TabInvigilation />}
-                    {activeTab === 'speaking_report' && <TabSpeakingReport />}
+                    { activeTab === 'speaking_report' && <TabSpeakingReport /> }
+                    { activeTab === 'config' && <TabConfig /> }
                   </div>
                 )}
               </div>

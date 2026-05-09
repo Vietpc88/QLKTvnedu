@@ -111,92 +111,6 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
     }
   };
 
-  const handleTeacherUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      setLoading(true);
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data, { type: 'array' });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
-
-      const newTeacherList = json.map((row: any) => {
-        const nameKey = Object.keys(row).find(k => ['họ và tên', 'giáo viên', 'tên', 'name'].includes(k.toLowerCase().trim()));
-        const phoneKey = Object.keys(row).find(k => ['số điện thoại', 'sđt', 'điện thoại', 'phone'].includes(k.toLowerCase().trim()));
-
-        let phone = String(row[phoneKey || ''] || '').trim().replace(/^'/, '');
-
-        return {
-          name: String(row[nameKey || ''] || '').trim(),
-          phone: phone
-        };
-      }).filter(t => t.name);
-
-      if (newTeacherList.length === 0) throw new Error("File Excel GV không có dữ liệu hợp lệ!");
-
-      setTeacherList(newTeacherList);
-      setTeachers(newTeacherList.map(t => t.name).sort());
-
-      alert(`Đã tải ${newTeacherList.length} giáo viên.`);
-    } catch (error: any) {
-      alert(`Lỗi: ${error.message}`);
-    } finally {
-      setLoading(false);
-      if (teacherInputRef.current) teacherInputRef.current.value = '';
-    }
-  };
-
-  const handleRoomUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      setLoading(true);
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data, { type: 'array' });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
-
-      if (json.length === 0) throw new Error("File Excel Phòng không có dữ liệu!");
-
-      const firstRow = json[0] as any;
-      const roomKey = Object.keys(firstRow).find(k => k.trim().toLowerCase() === 'phòng - khối');
-      const sttKey = Object.keys(firstRow).find(k => k.trim().toLowerCase() === 'stt');
-
-      if (!roomKey) throw new Error("Thiếu cột 'Phòng - Khối'!");
-
-      const newRoomData = json.map((row: any) => {
-        const r: any = {
-          stt: String(row[sttKey || 'stt'] || '').trim(),
-          room: String(row[roomKey]).trim(),
-        };
-        // Add all other keys as subject columns
-        Object.keys(row).forEach(k => {
-          if (k !== roomKey && k !== sttKey) r[k] = String(row[k]).trim();
-        });
-        return r;
-      });
-
-      setRoomData(newRoomData);
-
-      // Extract subjects
-      const subjects = Object.keys(firstRow).filter(k => {
-        const l = k.toLowerCase().trim();
-        if (!l || l === '' || l.includes('empty') || l.startsWith('_')) return false;
-        return !['stt', 'phòng - khối'].includes(l);
-      });
-      setSubjectColumns(subjects);
-      setMarkingSubjects(subjects); // Lưu danh sách môn học vào cấu hình hệ thống
-
-      alert(`Đã tải ${newRoomData.length} phòng.`);
-    } catch (error: any) {
-      alert(`Lỗi: ${error.message}`);
-    } finally {
-      setLoading(false);
-      if (roomInputRef.current) roomInputRef.current.value = '';
-    }
-  };
-
   const handleLoadFromGas = async () => {
     if (!gasUrl) {
       alert("Vui lòng cấu hình GAS URL trước!");
@@ -944,94 +858,6 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
         sidePanelType !== null ? "w-full lg:w-2/3" : "w-full"
       )}>
 
-        {/* Configuration Header - 2 Balanced Horizontal Cards */}
-        {isAdmin && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 shrink-0">
-            {/* Card 1: Teachers */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 flex items-center justify-between gap-4 relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-1 h-full bg-blue-600"></div>
-              <div className="flex items-center gap-3 overflow-hidden">
-                <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg shrink-0">
-                  <User size={16} />
-                </div>
-                <div className="min-w-0 pr-2">
-                  <h3 className="text-xs font-black text-gray-800 uppercase tracking-tight truncate">DS GIÁO VIÊN</h3>
-                  <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest truncate">Họ tên, SĐT</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => setSidePanelType(sidePanelType === 'teacher' ? null : 'teacher')}
-                  className={cn(
-                    "text-[9px] font-black px-2 py-1.5 rounded-lg border uppercase transition-all whitespace-nowrap",
-                    sidePanelType === 'teacher' ? "bg-blue-600 text-white border-blue-600" : "text-blue-600 bg-blue-50 border-blue-100"
-                  )}
-                >
-                  {sidePanelType === 'teacher' ? 'Ẩn' : 'Hiện'}
-                </button>
-                <button
-                  onClick={() => teacherInputRef.current?.click()}
-                  disabled={loading}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-black transition-all shadow-md shadow-blue-600/10 active:scale-95 text-[10px] uppercase"
-                >
-                  <FileUp size={14} />
-                  {loading ? '...' : 'NHẬP FILE'}
-                </button>
-                <button
-                  onClick={downloadTeacherTemplate}
-                  className="text-[9px] font-black text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-1.5 rounded-lg border border-blue-100 uppercase transition-all whitespace-nowrap"
-                  title="Tải mẫu Excel"
-                >
-                  Mẫu
-                </button>
-              </div>
-              <input type="file" ref={teacherInputRef} onChange={handleTeacherUpload} accept=".xlsx,.xls" className="hidden" />
-            </div>
-
-            {/* Card 2: Rooms & Subjects */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 flex items-center justify-between gap-4 relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600"></div>
-              <div className="flex items-center gap-3 overflow-hidden">
-                <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
-                  <Calendar size={16} />
-                </div>
-                <div className="min-w-0 pr-2">
-                  <h3 className="text-xs font-black text-gray-800 uppercase tracking-tight truncate">DS PHÒNG & MÔN</h3>
-                  <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest truncate">STT, Phòng, Môn</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => setSidePanelType(sidePanelType === 'room' ? null : 'room')}
-                  className={cn(
-                    "text-[9px] font-black px-2 py-1.5 rounded-lg border uppercase transition-all whitespace-nowrap",
-                    sidePanelType === 'room' ? "bg-indigo-600 text-white border-indigo-600" : "text-indigo-600 bg-indigo-50 border-indigo-100"
-                  )}
-                >
-                  {sidePanelType === 'room' ? 'Ẩn' : 'Hiện'}
-                </button>
-                <button
-                  onClick={() => roomInputRef.current?.click()}
-                  disabled={loading}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-black transition-all shadow-md shadow-indigo-600/10 active:scale-95 text-[10px] uppercase"
-                >
-                  <FileUp size={14} />
-                  {loading ? '...' : 'NHẬP FILE'}
-                </button>
-                <button
-                  onClick={downloadRoomTemplate}
-                  className="text-[9px] font-black text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-2 py-1.5 rounded-lg border border-indigo-100 uppercase transition-all whitespace-nowrap"
-                  title="Tải mẫu Excel"
-                >
-                  Mẫu
-                </button>
-              </div>
-              <input type="file" ref={roomInputRef} onChange={handleRoomUpload} accept=".xlsx,.xls" className="hidden" />
-            </div>
-          </div>
-        )}
 
         {/* Assignment Form */}
         {/* Unified Toolbar & Form */}
@@ -1173,18 +999,35 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
                   </button>
                 </>
               )}
-              {isAdmin && (
-                <button
-                  onClick={handleDeleteSelected}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 text-[11px] font-extrabold uppercase tracking-widest rounded-xl transition-all border",
-                    showConfirmDelete 
-                      ? "bg-rose-600 text-white border-rose-600 shadow-lg shadow-rose-200" 
-                      : "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
+              {selectedRows.size > 0 && (
+                <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
+                  <button
+                    onClick={() => handleBulkStatusChange('Xong')}
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100 shadow-sm shadow-emerald-500/5"
+                  >
+                    <CheckCircle2 size={14} /> Chuyển "Xong"
+                  </button>
+                  <button
+                    onClick={() => handleBulkStatusChange('Chưa')}
+                    className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-amber-100 transition-all border border-amber-100 shadow-sm shadow-amber-500/5"
+                  >
+                    <AlertCircle size={14} /> Chuyển "Chưa"
+                  </button>
+                  <div className="h-6 w-px bg-slate-200 mx-1" />
+                  {isAdmin && (
+                    <button
+                      onClick={handleDeleteSelected}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2 text-[11px] font-extrabold uppercase tracking-widest rounded-xl transition-all border shadow-sm",
+                        showConfirmDelete 
+                          ? "bg-rose-600 text-white border-rose-600 shadow-lg shadow-rose-200" 
+                          : "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
+                      )}
+                    >
+                      <Trash2 size={14} /> {showConfirmDelete ? "Chắc chắn?" : "Xóa chọn"}
+                    </button>
                   )}
-                >
-                  <Trash2 size={14} /> {showConfirmDelete ? "Chắc chắn?" : "Xóa chọn"}
-                </button>
+                </div>
               )}
             </div>
           </div>
