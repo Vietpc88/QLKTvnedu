@@ -734,11 +734,11 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
       let phoneStr = phone ? formatPhoneNumber(phone).replace(/^'/, '') : "";
 
       return {
-        "Khối": row.grade,
         "Môn": row.subject,
+        "Mã túi": row.package,
         "Giáo viên": row.teacherName || row.teacher,
         "Số điện thoại": phoneStr,
-        "Mã túi": row.package,
+        "Khối": row.grade,
         "Phòng": row.room || '',
         "Thời gian nhập": row.timestamp || '',
         "Trạng thái": row.status || 'Chưa'
