@@ -426,13 +426,15 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
 
     const completedTasksSet = new Set<string>();
     assignmentData.forEach(item => {
-      const key = `${normalizeStr(item.grade)}|${normalizeStr(item.subject)}|${normalizeStr(item.room)}|${String(item.package).toUpperCase().trim()}`;
+      const key = `${normalizeStr(item.grade)}|${normalizeStr(item.subject)}|${String(item.package).toUpperCase().trim()}`;
       completedTasksSet.add(key);
     });
 
-    let missing = Array.from(requiredTasksMap.entries())
-      .filter(([key]) => !completedTasksSet.has(key))
-      .map(([_, val]) => val);
+    let missing = Array.from(requiredTasksMap.values())
+      .filter(val => {
+        const lookupKey = `${normalizeStr(val.grade)}|${normalizeStr(val.subject)}|${val.pkg}`;
+        return !completedTasksSet.has(lookupKey);
+      });
 
     // Filter by selected grade and subject if they are selected
     if (filterGrade) {
@@ -492,13 +494,15 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
 
     const completedTasksSet = new Set<string>();
     assignmentData.forEach(item => {
-      const key = `${normalizeStr(item.grade)}|${normalizeStr(item.subject)}|${normalizeStr(item.room)}|${String(item.package).toUpperCase().trim()}`;
+      const key = `${normalizeStr(item.grade)}|${normalizeStr(item.subject)}|${String(item.package).toUpperCase().trim()}`;
       completedTasksSet.add(key);
     });
 
-    let missingTasks = Array.from(requiredTasksMap.entries())
-      .filter(([key]) => !completedTasksSet.has(key))
-      .map(([_, val]) => val);
+    let missingTasks = Array.from(requiredTasksMap.values())
+      .filter(val => {
+        const lookupKey = `${normalizeStr(val.grade)}|${normalizeStr(val.subject)}|${val.pkg}`;
+        return !completedTasksSet.has(lookupKey);
+      });
 
     // Filter by selected grade and subject if they are selected
     if (filterGrade) {
@@ -564,13 +568,15 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
 
     const completedTasksSet = new Set<string>();
     assignmentData.forEach(item => {
-      const key = `${normalizeStr(item.grade)}|${normalizeStr(item.subject)}|${normalizeStr(item.room)}|${String(item.package).toUpperCase().trim()}`;
+      const key = `${normalizeStr(item.grade)}|${normalizeStr(item.subject)}|${String(item.package).toUpperCase().trim()}`;
       completedTasksSet.add(key);
     });
 
-    let missingTasks = Array.from(requiredTasksMap.entries())
-      .filter(([key]) => !completedTasksSet.has(key))
-      .map(([_, val]) => val);
+    let missingTasks = Array.from(requiredTasksMap.values())
+      .filter(val => {
+        const lookupKey = `${normalizeStr(val.grade)}|${normalizeStr(val.subject)}|${val.pkg}`;
+        return !completedTasksSet.has(lookupKey);
+      });
 
     if (filterGrade) {
       missingTasks = missingTasks.filter(t => normalizeStr(t.grade) === normalizeStr(filterGrade));
