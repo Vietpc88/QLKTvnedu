@@ -760,25 +760,6 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
     XLSX.writeFile(wb, `PhanCong_${new Date().getTime()}.xlsx`);
   };
 
-  const handleExportTemplate = () => {
-    const wsTeachers = XLSX.utils.json_to_sheet([{
-      'Giáo viên': 'Nguyễn Văn A',
-      'Số điện thoại': '0987654321'
-    }]);
-
-    const wsRooms = XLSX.utils.json_to_sheet([{
-      'STT': '1',
-      'Phòng - Khối': 'Phòng 1 Khối 6',
-      'Toán': 'AAB, BBC',
-      'Văn': 'CCD'
-    }]);
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, wsTeachers, "GiaoVien");
-    XLSX.utils.book_append_sheet(wb, wsRooms, "PhongThi");
-
-    XLSX.writeFile(wb, "MauNhapLieu_2File.xlsx");
-  };
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-full lg:min-h-0 overflow-y-auto lg:overflow-hidden">
@@ -882,39 +863,6 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
             </div>
             
             <div className="flex flex-wrap items-center gap-2">
-              {isAdmin && (
-                <>
-                  <button
-                    onClick={onBackup}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 rounded-xl text-[11px] font-black text-gray-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-widest"
-                  >
-                    <Download size={14} className="text-blue-500" /> Sao lưu
-                  </button>
-                  <button
-                    onClick={onRestore}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 rounded-xl text-[11px] font-black text-gray-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-widest"
-                  >
-                    <Upload size={14} className="text-emerald-500" /> Phục hồi
-                  </button>
-                  <div className="h-6 w-px bg-gray-200 mx-1" />
-                </>
-              )}
-              {isAdmin && (
-                <button
-                  onClick={handleExportTemplate}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 text-gray-700 text-[10px] font-black uppercase tracking-tight rounded-lg hover:bg-slate-100 transition-all border border-gray-200"
-                >
-                  <FileDown size={14} className="text-amber-500" /> Mẫu toàn bộ
-                </button>
-              )}
-              {isAdmin && (
-                <button
-                  onClick={onReset}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-rose-50 text-rose-600 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-100 transition-all border border-rose-100"
-                >
-                  <Trash2 size={14} /> Reset
-                </button>
-              )}
             </div>
           </div>
 

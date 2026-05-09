@@ -613,7 +613,13 @@ const MainApp = () => {
                     {activeTab === 'merger' && <TabMerger />}
                     {activeTab === 'invigilation' && <TabInvigilation />}
                     { activeTab === 'speaking_report' && <TabSpeakingReport /> }
-                    { activeTab === 'config' && <TabConfig /> }
+                    { activeTab === 'config' && (
+                      <TabConfig 
+                        onBackup={handleBackup}
+                        onRestore={() => fileInputRef.current?.click()}
+                        onReset={() => setShowResetModal(true)}
+                      />
+                    )}
                   </div>
                 )}
               </div>
