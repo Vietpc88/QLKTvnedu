@@ -299,56 +299,49 @@ export const TabStatistics: React.FC = () => {
         </div>
       </div>
 
-      {/* Detailed Combo Matrix */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-8 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <Clock className="text-amber-500" size={20} />
-            <h3 className="font-black text-gray-800 uppercase tracking-tight">Chi tiết Phân công (Môn + Khối)</h3>
-          </div>
+      {/* Detailed Combo Matrix - Grouped by Grade */}
+      <div className="flex flex-col gap-6 mt-8">
+        <div className="flex items-center gap-3 px-2">
+          <Clock className="text-amber-500" size={24} />
+          <h3 className="font-black text-gray-800 text-xl uppercase tracking-tight">Tiến độ chi tiết: Môn theo Khối</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-              <tr>
-                <th className="px-8 py-4">Kết hợp</th>
-                <th className="px-8 py-4">Khối</th>
-                <th className="px-8 py-4">Môn</th>
-                <th className="px-8 py-4 text-center">Tổng số túi</th>
-                <th className="px-8 py-4 text-center">Đã phân công</th>
-                <th className="px-8 py-4 text-center">Hoàn thành</th>
-                <th className="px-8 py-4 text-right">Tiến độ</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {stats.combos.map((c, i) => (
-                <tr key={i} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-8 py-4 font-bold text-gray-800">{c.label}</td>
-                  <td className="px-8 py-4 text-gray-500">{c.grade}</td>
-                  <td className="px-8 py-4 text-gray-500">{c.subject}</td>
-                  <td className="px-8 py-4 text-center font-bold text-gray-400">{c.total}</td>
-                  <td className="px-8 py-4 text-center">
-                    <span className={cn(
-                      "px-3 py-1 rounded-full text-[10px] font-black",
-                      c.assigned === c.total ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
-                    )}>
-                      {c.assigned} / {c.total}
+        
+        {Object.entries(
+          stats.combos.reduce((acc, curr) => {
+            if (!acc[curr.grade]) acc[curr.grade] = [];
+            acc[curr.grade].push(curr);
+            return acc;
+          }, {} as Record<string, typeof stats.combos>)
+        ).map(([grade, combos]) => (
+          <div key={grade} className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full -mr-8 -mt-8 opacity-50 pointer-events-none"></div>
+            <h4 className="text-lg font-black text-indigo-900 border-b border-indigo-50 pb-2 flex items-center gap-2">
+              <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-lg">Khối {grade}</span>
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 relative z-10">
+              {combos.map(c => (
+                <div key={c.label} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col gap-3 hover:border-blue-200 transition-colors hover:shadow-md">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-black text-slate-700 uppercase">{c.subject}</span>
+                    <span className="text-[10px] font-bold text-slate-500 bg-white px-2 py-1 rounded border border-slate-200">
+                      Tổng: {c.total}
                     </span>
-                  </td>
-                  <td className="px-8 py-4 text-center font-black text-blue-600">{c.done}</td>
-                  <td className="px-8 py-4 text-right">
-                    <div className="flex items-center justify-end gap-3">
-                      <div className="w-24 bg-gray-100 h-1.5 rounded-full overflow-hidden shrink-0">
-                        <div className="bg-emerald-500 h-full" style={{ width: `${(c.done/c.total)*100}%` }}></div>
-                      </div>
-                      <span className="text-[10px] font-black w-8">{Math.round((c.done/c.total)*100)}%</span>
+                  </div>
+                  <div className="flex gap-2 mt-1">
+                    <div className="flex-1 bg-white rounded-xl p-2 text-center border border-rose-100">
+                      <div className="text-[9px] font-extrabold text-rose-500 uppercase tracking-widest">Chưa xong</div>
+                      <div className="text-xl font-black text-rose-600 leading-tight">{c.total - c.done}</div>
                     </div>
-                  </td>
-                </tr>
+                    <div className="flex-1 bg-white rounded-xl p-2 text-center border border-emerald-100">
+                      <div className="text-[9px] font-extrabold text-emerald-600 uppercase tracking-widest">Đã xong</div>
+                      <div className="text-xl font-black text-emerald-600 leading-tight">{c.done}</div>
+                    </div>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
