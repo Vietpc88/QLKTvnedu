@@ -247,19 +247,21 @@ export const TabStatistics: React.FC = () => {
               <div key={g.label} className="group">
                 <div className="flex justify-between items-end mb-2">
                   <span className="font-bold text-gray-700">Khối {g.label}</span>
-                  <div className="text-right">
-                    <span className="text-xs font-black text-indigo-600">{g.assigned}</span>
-                    <span className="text-[10px] font-bold text-gray-400 mx-1">/</span>
-                    <span className="text-xs font-bold text-gray-500">{g.total} phân công</span>
+                  <div className="flex gap-2 text-xs">
+                    <span className="font-bold text-gray-500">Tổng: <span className="text-gray-800">{g.total}</span> túi</span>
                   </div>
                 </div>
                 <div className="relative h-3 bg-slate-50 rounded-full border border-slate-100 overflow-hidden">
                   <div className="absolute inset-y-0 left-0 bg-blue-100 transition-all duration-1000" style={{ width: `${(g.assigned/g.total)*100}%` }}></div>
-                  <div className="absolute inset-y-0 left-0 bg-blue-600 transition-all duration-1000 shadow-[0_0_10px_rgba(37,99,235,0.3)]" style={{ width: `${(g.done/g.total)*100}%` }}></div>
+                  <div className="absolute inset-y-0 left-0 bg-emerald-500 transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.3)]" style={{ width: `${(g.done/g.total)*100}%` }}></div>
                 </div>
-                <div className="mt-1 flex justify-between text-[9px] font-black uppercase tracking-widest text-gray-400">
-                  <span>Phân công: {Math.round((g.assigned/g.total)*100)}%</span>
-                  <span className="text-blue-600">Hoàn thành: {Math.round((g.done/g.total)*100)}%</span>
+                <div className="mt-2 flex justify-between text-[10px] font-bold">
+                  <span className="text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-100">
+                    CHƯA XONG: <span className="font-black text-sm">{g.total - g.done}</span>
+                  </span>
+                  <span className="text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
+                    ĐÃ XONG: <span className="font-black text-sm">{g.done}</span>
+                  </span>
                 </div>
               </div>
             ))}
@@ -275,18 +277,21 @@ export const TabStatistics: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {stats.subjects.map(s => (
               <div key={s.label} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col gap-3 group hover:border-indigo-200 transition-colors">
-                <div className="flex justify-between items-start">
-                  <span className="text-xs font-black text-slate-600 uppercase truncate max-w-[100px]">{s.label}</span>
-                  <span className="text-[10px] font-black px-2 py-1 bg-white rounded-lg text-indigo-600 border border-indigo-50">
-                    Phân công: {Math.round((s.assigned/s.total)*100)}%
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-black text-slate-700 uppercase truncate">{s.label}</span>
+                  <span className="text-[10px] font-bold text-slate-500 bg-white px-2 py-1 rounded border border-slate-200">
+                    Tổng: {s.total}
                   </span>
                 </div>
-                <div className="flex items-end gap-1.5">
-                  <span className="text-xl font-black text-slate-800">{s.assigned}</span>
-                  <span className="text-xs font-bold text-slate-400 mb-1">/ {s.total} phân công</span>
-                </div>
-                <div className="w-full bg-white h-1.5 rounded-full overflow-hidden border border-slate-200">
-                  <div className="bg-indigo-500 h-full" style={{ width: `${(s.done/s.total)*100}%` }}></div>
+                <div className="flex gap-2 mt-1">
+                  <div className="flex-1 bg-white rounded-xl p-2 text-center border border-rose-100">
+                    <div className="text-[9px] font-extrabold text-rose-500 uppercase tracking-widest">Chưa xong</div>
+                    <div className="text-xl font-black text-rose-600 leading-tight">{s.total - s.done}</div>
+                  </div>
+                  <div className="flex-1 bg-white rounded-xl p-2 text-center border border-emerald-100">
+                    <div className="text-[9px] font-extrabold text-emerald-600 uppercase tracking-widest">Đã xong</div>
+                    <div className="text-xl font-black text-emerald-600 leading-tight">{s.done}</div>
+                  </div>
                 </div>
               </div>
             ))}
