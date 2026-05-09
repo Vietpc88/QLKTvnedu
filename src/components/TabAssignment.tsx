@@ -727,20 +727,21 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
     const exportData = filteredAssignmentData.map(row => {
       let phone = row.phone || '';
       if (!phone) {
-        const tInfo = teacherList.find(t => String(t.name).trim() === row.teacher);
+        const tInfo = teacherList.find(t => String(t.name).trim() === (row.teacherName || row.teacher));
         phone = tInfo?.phone || '';
       }
 
       let phoneStr = phone ? formatPhoneNumber(phone).replace(/^'/, '') : "";
 
       return {
+        "Khối": row.grade,
         "Môn": row.subject,
-        "Mã túi": row.package,
-        "Giáo viên": row.teacher,
+        "Giáo viên": row.teacherName || row.teacher,
         "Số điện thoại": phoneStr,
+        "Mã túi": row.package,
+        "Phòng": row.room || '',
         "Thời gian nhập": row.timestamp || '',
-        "Trạng thái": row.status || 'Chưa',
-        "ID": row.id || ''
+        "Trạng thái": row.status || 'Chưa'
       };
     });
 
