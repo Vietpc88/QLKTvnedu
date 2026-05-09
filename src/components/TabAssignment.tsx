@@ -999,12 +999,20 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
             {isAdmin && (
               <select
                 value={filterTeacher} onChange={e => setFilterTeacher(e.target.value)}
-                className="bg-white border border-border-soft rounded-xl px-4 py-2 text-xs font-bold w-full sm:w-56 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
+                className="bg-white border border-border-soft rounded-xl px-4 py-2 text-xs font-bold w-full sm:w-48 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
               >
                 <option value="" key="all-teachers">Tất cả giáo viên</option>
                 {teachers.filter(Boolean).map(t => <option key={`filter-t-${t}`} value={t}>{t}</option>)}
               </select>
             )}
+            <select
+              value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+              className="bg-white border border-border-soft rounded-xl px-4 py-2 text-xs font-bold w-full sm:w-36 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="Chưa">Chưa xong</option>
+              <option value="Xong">Đã xong</option>
+            </select>
             <div className="relative flex-1 min-w-[240px] w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-body/30" size={16} />
               <input
