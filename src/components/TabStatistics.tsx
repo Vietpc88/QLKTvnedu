@@ -22,48 +22,61 @@ export const TabStatistics: React.FC = () => {
   }, [roomData]);
 
   const stats = useMemo(() => {
-    const requiredPkgs: { grade: string, subject: string, pkg: string }[] = [];
-    
-    // 1. Extract all required packages from roomData
-    roomData.forEach(row => {
-      const roomRaw = String(row.room || '');
-      let grade = '';
-      if (roomRaw.toLowerCase().includes('khối')) {
-        grade = roomRaw.toLowerCase().split('khối').pop()?.trim() || 'Khác';
-      } else {
-        grade = roomRaw || 'Khác';
-      }
-
-      subjectColumns.forEach(sub => {
-        const cellValue = row[sub];
-        if (cellValue && String(cellValue).trim()) {
-          const pkgs = String(cellValue).split(',').map(p => p.trim().toUpperCase()).filter(Boolean);
-          pkgs.forEach(pkg => {
-            requiredPkgs.push({ grade, subject: sub, pkg });
-          });
-        }
-      });
-    });
-
     const normalize = (s: any) => String(s || '').toLowerCase().trim();
 
-    // 2. Count assigned and done from assignmentData
+    // 1. Map assigned statuses from assignmentData
     const assignedMap = new Map<string, string>(); // key -> status
     assignmentData.forEach(a => {
       const key = `${normalize(a.grade)}|${normalize(a.subject)}|${normalize(a.package)}`;
       assignedMap.set(key, a.status || 'Chưa');
     });
 
-    const allResults = requiredPkgs.map(item => {
-      const key = `${normalize(item.grade)}|${normalize(item.subject)}|${normalize(item.pkg)}`;
-      const status = assignedMap.get(key);
-      return {
-        ...item,
-        isAssigned: assignedMap.has(key),
-        isDone: status === 'Xong'
-      };
+    // 2. Identify subjects per grade
+    const subjectsPerGrade = new Map<string, Set<string>>();
+    roomData.forEach(row => {
+      const roomRaw = String(row.room || '');
+      const grade = roomRaw.toLowerCase().includes('khối') 
+        ? (roomRaw.toLowerCase().split('khối').pop()?.trim() || 'Khác')
+        : (roomRaw || 'Khác');
+      
+      if (!subjectsPerGrade.has(grade)) subjectsPerGrade.set(grade, new Set());
+      subjectColumns.forEach(sub => {
+        if (row[sub] && String(row[sub]).trim()) {
+          subjectsPerGrade.get(grade)!.add(sub);
+        }
+      });
     });
 
+    // 3. Build tasks list based on Rooms * Subjects
+    const allResults: any[] = [];
+    roomData.forEach(row => {
+      const roomRaw = String(row.room || '');
+      const grade = roomRaw.toLowerCase().includes('khối') 
+        ? (roomRaw.toLowerCase().split('khối').pop()?.trim() || 'Khác')
+        : (roomRaw || 'Khác');
+      
+      const gradeSubjects = subjectsPerGrade.get(grade) || new Set();
+
+      gradeSubjects.forEach(sub => {
+        const cellValue = row[sub];
+        let isAssigned = false;
+        let isDone = false;
+
+        // If cell has packages, check their status
+        if (cellValue && String(cellValue).trim()) {
+          const pkgs = String(cellValue).split(',').map(p => p.trim().toUpperCase()).filter(Boolean);
+          // A room-subject task is considered assigned if ALL its packages are assigned
+          if (pkgs.length > 0) {
+            isAssigned = pkgs.every(pkg => assignedMap.has(`${normalize(grade)}|${normalize(sub)}|${normalize(pkg)}`));
+            isDone = pkgs.every(pkg => assignedMap.get(`${normalize(grade)}|${normalize(sub)}|${normalize(pkg)}`) === 'Xong');
+          }
+        }
+
+        allResults.push({ grade, subject: sub, room: roomRaw, isAssigned, isDone });
+      });
+    });
+
+    // 4. Apply filters
     const results = allResults.filter(r => {
       const matchGrade = !filterGrade || normalize(r.grade) === normalize(filterGrade);
       const matchSubject = !filterSubject || normalize(r.subject) === normalize(filterSubject);
