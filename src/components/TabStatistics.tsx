@@ -255,12 +255,15 @@ export const TabStatistics: React.FC = () => {
                   <div className="absolute inset-y-0 left-0 bg-blue-100 transition-all duration-1000" style={{ width: `${(g.assigned/g.total)*100}%` }}></div>
                   <div className="absolute inset-y-0 left-0 bg-emerald-500 transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.3)]" style={{ width: `${(g.done/g.total)*100}%` }}></div>
                 </div>
-                <div className="mt-2 flex justify-between text-[10px] font-bold">
-                  <span className="text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-100">
-                    CHƯA XONG: <span className="font-black text-sm">{g.total - g.done}</span>
+                <div className="mt-2 flex justify-between text-[10px] font-bold gap-1">
+                  <span className="flex-1 text-center text-blue-600 bg-blue-50 px-1 py-1.5 rounded-lg border border-blue-100">
+                    ĐÃ NHẬP: <span className="font-black text-sm block sm:inline">{g.assigned}</span>
                   </span>
-                  <span className="text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
-                    ĐÃ XONG: <span className="font-black text-sm">{g.done}</span>
+                  <span className="flex-1 text-center text-amber-600 bg-amber-50 px-1 py-1.5 rounded-lg border border-amber-100">
+                    CHƯA XONG: <span className="font-black text-sm block sm:inline">{g.assigned - g.done}</span>
+                  </span>
+                  <span className="flex-1 text-center text-emerald-600 bg-emerald-50 px-1 py-1.5 rounded-lg border border-emerald-100">
+                    ĐÃ XONG: <span className="font-black text-sm block sm:inline">{g.done}</span>
                   </span>
                 </div>
               </div>
@@ -283,14 +286,18 @@ export const TabStatistics: React.FC = () => {
                     Tổng: {s.total}
                   </span>
                 </div>
-                <div className="flex gap-2 mt-1">
-                  <div className="flex-1 bg-white rounded-xl p-2 text-center border border-rose-100">
-                    <div className="text-[9px] font-extrabold text-rose-500 uppercase tracking-widest">Chưa xong</div>
-                    <div className="text-xl font-black text-rose-600 leading-tight">{s.total - s.done}</div>
+                <div className="flex gap-1.5 mt-1">
+                  <div className="flex-1 bg-white rounded-xl p-1.5 text-center border border-blue-100">
+                    <div className="text-[8px] font-extrabold text-blue-500 uppercase tracking-widest">Đã nhập</div>
+                    <div className="text-lg font-black text-blue-600 leading-tight">{s.assigned}</div>
                   </div>
-                  <div className="flex-1 bg-white rounded-xl p-2 text-center border border-emerald-100">
-                    <div className="text-[9px] font-extrabold text-emerald-600 uppercase tracking-widest">Đã xong</div>
-                    <div className="text-xl font-black text-emerald-600 leading-tight">{s.done}</div>
+                  <div className="flex-1 bg-white rounded-xl p-1.5 text-center border border-amber-100">
+                    <div className="text-[8px] font-extrabold text-amber-500 uppercase tracking-widest">Chưa xong</div>
+                    <div className="text-lg font-black text-amber-600 leading-tight">{s.assigned - s.done}</div>
+                  </div>
+                  <div className="flex-1 bg-white rounded-xl p-1.5 text-center border border-emerald-100">
+                    <div className="text-[8px] font-extrabold text-emerald-600 uppercase tracking-widest">Đã xong</div>
+                    <div className="text-lg font-black text-emerald-600 leading-tight">{s.done}</div>
                   </div>
                 </div>
               </div>
@@ -327,14 +334,18 @@ export const TabStatistics: React.FC = () => {
                       Tổng: {c.total}
                     </span>
                   </div>
-                  <div className="flex gap-2 mt-1">
-                    <div className="flex-1 bg-white rounded-xl p-2 text-center border border-rose-100">
-                      <div className="text-[9px] font-extrabold text-rose-500 uppercase tracking-widest">Chưa xong</div>
-                      <div className="text-xl font-black text-rose-600 leading-tight">{c.total - c.done}</div>
+                  <div className="flex gap-1 mt-1">
+                    <div className="flex-1 bg-white rounded-lg p-1.5 text-center border border-blue-100">
+                      <div className="text-[8px] font-extrabold text-blue-500 uppercase tracking-widest">Đã nhập</div>
+                      <div className="text-lg font-black text-blue-600 leading-tight">{c.assigned}</div>
                     </div>
-                    <div className="flex-1 bg-white rounded-xl p-2 text-center border border-emerald-100">
-                      <div className="text-[9px] font-extrabold text-emerald-600 uppercase tracking-widest">Đã xong</div>
-                      <div className="text-xl font-black text-emerald-600 leading-tight">{c.done}</div>
+                    <div className="flex-1 bg-white rounded-lg p-1.5 text-center border border-amber-100">
+                      <div className="text-[8px] font-extrabold text-amber-500 uppercase tracking-widest">Chưa xong</div>
+                      <div className="text-lg font-black text-amber-600 leading-tight">{c.assigned - c.done}</div>
+                    </div>
+                    <div className="flex-1 bg-white rounded-lg p-1.5 text-center border border-emerald-100">
+                      <div className="text-[8px] font-extrabold text-emerald-600 uppercase tracking-widest">Đã xong</div>
+                      <div className="text-lg font-black text-emerald-600 leading-tight">{c.done}</div>
                     </div>
                   </div>
                 </div>
