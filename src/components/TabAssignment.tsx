@@ -956,19 +956,23 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
               )}
               {selectedRows.size > 0 && (
                 <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
-                  <button
-                    onClick={() => handleBulkStatusChange('Xong')}
-                    className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100 shadow-sm shadow-emerald-500/5"
-                  >
-                    <CheckCircle2 size={14} /> Chuyển "Xong"
-                  </button>
-                  <button
-                    onClick={() => handleBulkStatusChange('Chưa')}
-                    className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-amber-100 transition-all border border-amber-100 shadow-sm shadow-amber-500/5"
-                  >
-                    <AlertCircle size={14} /> Chuyển "Chưa"
-                  </button>
-                  <div className="h-6 w-px bg-slate-200 mx-1" />
+                  {isAdmin && (
+                    <>
+                      <button
+                        onClick={() => handleBulkStatusChange('Xong')}
+                        className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100 shadow-sm shadow-emerald-500/5"
+                      >
+                        <CheckCircle2 size={14} /> Chuyển "Xong"
+                      </button>
+                      <button
+                        onClick={() => handleBulkStatusChange('Chưa')}
+                        className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 text-[11px] font-extrabold uppercase tracking-widest rounded-xl hover:bg-amber-100 transition-all border border-amber-100 shadow-sm shadow-amber-500/5"
+                      >
+                        <AlertCircle size={14} /> Chuyển "Chưa"
+                      </button>
+                      <div className="h-6 w-px bg-slate-200 mx-1" />
+                    </>
+                  )}
                   {isAdmin && (
                     <button
                       onClick={handleDeleteSelected}
@@ -1086,19 +1090,32 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
                     <td className="px-4 py-2 text-xs">{row.room}</td>
                     <td className="px-4 py-2 text-[10px] text-gray-400">{row.timestamp || ''}</td>
                     <td className="px-4 py-2 text-center">
-                      <select
-                        value={row.status || 'Chưa'}
-                        onChange={(e) => handleStatusChange(row, e.target.value)}
-                        className={cn(
-                          "px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer outline-none",
-                          (!row.status || row.status === 'Chưa')
-                            ? "bg-red-100 text-red-700"
-                            : "bg-green-100 text-green-700"
-                        )}
-                      >
-                        <option value="Chưa">Chưa</option>
-                        <option value="Xong">Xong</option>
-                      </select>
+                      {isAdmin ? (
+                        <select
+                          value={row.status || 'Chưa'}
+                          onChange={(e) => handleStatusChange(row, e.target.value)}
+                          className={cn(
+                            "px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer outline-none",
+                            (!row.status || row.status === 'Chưa')
+                              ? "bg-red-100 text-red-700"
+                              : "bg-green-100 text-green-700"
+                          )}
+                        >
+                          <option value="Chưa">Chưa</option>
+                          <option value="Xong">Xong</option>
+                        </select>
+                      ) : (
+                        <span
+                          className={cn(
+                            "px-2 py-1 rounded text-xs font-medium",
+                            (!row.status || row.status === 'Chưa')
+                              ? "bg-red-100 text-red-700"
+                              : "bg-green-100 text-green-700"
+                          )}
+                        >
+                          {row.status || 'Chưa'}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
