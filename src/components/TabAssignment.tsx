@@ -267,17 +267,39 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
         if (!found) notFoundPkgs.push(p);
       });
 
-      if (matches.length === 0) {
+      // --- DUPLICATE CHECK LOGIC ---
+      const duplicates: string[] = [];
+      const finalMatches: any[] = [];
+
+      matches.forEach(m => {
+        const isDuplicate = assignmentData.some(a => 
+          String(a.grade).trim().toLowerCase() === String(grade).trim().toLowerCase() &&
+          String(a.subject).trim().toLowerCase() === String(subject).trim().toLowerCase() &&
+          String(a.package).trim().toUpperCase() === String(m.pkg).trim().toUpperCase()
+        );
+        
+        if (isDuplicate) {
+          duplicates.push(m.pkg);
+        } else {
+          finalMatches.push(m);
+        }
+      });
+
+      if (finalMatches.length === 0) {
+        let errorMsg = "Không có túi nào được phân công.";
+        if (duplicates.length > 0) errorMsg += `\n- Đã tồn tại: ${duplicates.join(', ')}`;
+        if (notFoundPkgs.length > 0) errorMsg += `\n- Không tìm thấy trong DS gốc: ${notFoundPkgs.join(', ')}`;
+        
         setDialog({
           title: 'Không thể phân công',
-          message: `Các túi không tồn tại trong dữ liệu gốc: ${notFoundPkgs.join(', ')}`,
+          message: errorMsg,
           type: 'error'
         });
         setLoading(false);
         return;
       }
 
-      matches.sort((a, b) => {
+      finalMatches.sort((a, b) => {
         const numA = parseFloat(String(a.stt).replace('.', ''));
         const numB = parseFloat(String(b.stt).replace('.', ''));
         return (isNaN(numA) ? 999 : numA) - (isNaN(numB) ? 999 : numB);
@@ -299,7 +321,7 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
         phone = existingAssignment?.phone || '';
       }
 
-      const newAssignments = matches.map(m => ({
+      const newAssignments = finalMatches.map(m => ({
         grade,
         subject,
         teacherName: teacher,
@@ -319,15 +341,19 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
 
       setPackages('');
 
-      let msg = response?.message || `Đã gửi yêu cầu phân công ${matches.length} túi.`;
+      // --- CONSTRUCT RESULT MESSAGE ---
+      let resultMsg = `Thành công: ${finalMatches.length} túi.`;
+      if (duplicates.length > 0) {
+        resultMsg += `\n\n⚠️ THẤT BẠI (ĐÃ TỒN TẠI): ${duplicates.join(', ')}`;
+      }
       if (notFoundPkgs.length > 0) {
-        msg += `\n\nLưu ý: Các túi không tồn tại trong dữ liệu gốc: ${notFoundPkgs.join(', ')}`;
+        resultMsg += `\n\n❌ THẤT BẠI (KHÔNG CÓ TRONG DS GỐC): ${notFoundPkgs.join(', ')}`;
       }
 
       setDialog({
-        title: response?.status === 'partial' ? 'Phân công một phần' : 'Kết quả',
-        message: msg,
-        type: response?.status === 'partial' ? 'warning' : 'success'
+        title: (duplicates.length > 0 || notFoundPkgs.length > 0) ? 'Kết quả phân công (Một phần)' : 'Thành công',
+        message: resultMsg,
+        type: (duplicates.length > 0 || notFoundPkgs.length > 0) ? 'warning' : 'success'
       });
 
     } catch (error: any) {
