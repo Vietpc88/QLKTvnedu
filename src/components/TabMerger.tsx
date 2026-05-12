@@ -25,6 +25,7 @@ export const TabMerger: React.FC = () => {
   const [currentFile, setCurrentFile] = useState('');
   const [searchSbd, setSearchSbd] = useState('');
   const [searchName, setSearchName] = useState('');
+  const [searchPhach, setSearchPhach] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -184,8 +185,8 @@ export const TabMerger: React.FC = () => {
       alert("Vui lòng tải file Excel Mã phách trước.");
       return;
     }
-    if (!searchSbd.trim() && !searchName.trim()) {
-      alert("Vui lòng nhập Số báo danh hoặc Họ và tên.");
+    if (!searchSbd.trim() && !searchName.trim() && !searchPhach.trim()) {
+      alert("Vui lòng nhập Số báo danh, Họ và tên hoặc Số phách.");
       return;
     }
 
@@ -202,6 +203,13 @@ export const TabMerger: React.FC = () => {
       const nameQuery = searchName.trim().toLowerCase();
       allMatches = allMatches.filter(r => 
         String(r.name || '').toLowerCase().includes(nameQuery)
+      );
+    }
+
+    if (searchPhach.trim()) {
+      const phachList = searchPhach.split(',').map(c => c.trim().toLowerCase());
+      allMatches = allMatches.filter(r => 
+        phachList.includes(String(r.phach).trim().toLowerCase())
       );
     }
 
@@ -604,6 +612,15 @@ export const TabMerger: React.FC = () => {
               className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm"
             />
           </div>
+          <div className="flex-1 w-full">
+            <label className="block text-[11px] text-gray-500 mb-1 uppercase font-semibold">Số phách</label>
+            <input 
+              type="text" placeholder="Nhập số phách..." 
+              value={searchPhach} onChange={e => setSearchPhach(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+              className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm"
+            />
+          </div>
           <button 
             onClick={handleSearch}
             className="flex items-center justify-center gap-2 px-6 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 h-[34px] w-full sm:w-40"
@@ -685,30 +702,42 @@ export const TabMerger: React.FC = () => {
             <table className="w-full text-sm text-left">
               <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0">
                 <tr>
-                  <th className="px-3 py-2">SBD</th>
-                  <th className="px-3 py-2">Phách</th>
-                  <th className="px-3 py-2">Túi</th>
-                  <th className="px-3 py-2">Giáo viên</th>
-                  <th className="px-3 py-2">Phòng</th>
-                  <th className="px-3 py-2">Họ tên</th>
-                  <th className="px-3 py-2">Điểm Nói</th>
+                  <th className="px-2 py-2">STT</th>
+                  <th className="px-2 py-2">SBD</th>
+                  <th className="px-2 py-2">Phách</th>
+                  <th className="px-2 py-2">Họ tên</th>
+                  <th className="px-2 py-2">Phái</th>
+                  <th className="px-2 py-2">Lớp</th>
+                  <th className="px-2 py-2">Môn</th>
+                  <th className="px-2 py-2">Túi</th>
+                  <th className="px-2 py-2">Phòng</th>
+                  <th className="px-2 py-2">GV Chấm</th>
+                  <th className="px-2 py-2">Ngày sinh</th>
+                  <th className="px-2 py-2">Nơi sinh</th>
+                  <th className="px-2 py-2">Điểm Nói</th>
                 </tr>
               </thead>
               <tbody>
                 {searchResults.map((row, i) => (
-                  <tr key={i} className="bg-white border-b hover:bg-gray-50">
-                    <td className="px-3 py-2 font-medium">{row.sbd}</td>
-                    <td className="px-3 py-2">{row.phach}</td>
-                    <td className="px-3 py-2">{row.tui}</td>
-                    <td className="px-3 py-2 font-bold text-blue-600">{row.teacher}</td>
-                    <td className="px-3 py-2 text-red-600 font-medium">{row.room}</td>
-                    <td className="px-3 py-2">{row.name}</td>
-                    <td className="px-3 py-2 font-bold text-indigo-600">{row.speakingScore || '-'}</td>
+                  <tr key={i} className="bg-white border-b hover:bg-gray-50 text-[13px]">
+                    <td className="px-2 py-2">{row.stt}</td>
+                    <td className="px-2 py-2 font-bold text-blue-700">{row.sbd}</td>
+                    <td className="px-2 py-2 font-bold text-red-600">{row.phach}</td>
+                    <td className="px-2 py-2 font-semibold">{row.name}</td>
+                    <td className="px-2 py-2">{row.gender}</td>
+                    <td className="px-2 py-2">{row.className}</td>
+                    <td className="px-2 py-2">{row.subject}</td>
+                    <td className="px-2 py-2">{row.tui}</td>
+                    <td className="px-2 py-2 font-medium text-purple-700">{row.room}</td>
+                    <td className="px-2 py-2 font-medium text-emerald-700">{row.teacher}</td>
+                    <td className="px-2 py-2">{row.dob}</td>
+                    <td className="px-2 py-2">{row.pob}</td>
+                    <td className="px-2 py-2 font-bold text-indigo-600">{row.speakingScore || '-'}</td>
                   </tr>
                 ))}
                 {searchResults.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={13} className="px-4 py-8 text-center text-gray-500">
                       Chưa có kết quả tìm kiếm
                     </td>
                   </tr>
