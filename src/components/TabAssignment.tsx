@@ -1083,7 +1083,7 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
                   <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Môn</th>
                   <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Giáo viên</th>
                   <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Mã túi</th>
-                  <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Phòng</th>
+                  {isAdmin && <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Phòng</th>}
                   <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft">Thời gian</th>
                   <th className="px-6 py-4 text-[11px] font-extrabold text-text-body opacity-40 uppercase tracking-widest border-b border-border-soft text-center">Trạng thái</th>
                 </tr>
@@ -1113,7 +1113,7 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
                     <td className="px-4 py-2">{row.subject}</td>
                     <td className="px-4 py-2 font-medium">{row.teacherName || row.teacher}</td>
                     <td className="px-4 py-2 font-bold text-blue-600">{row.package}</td>
-                    <td className="px-4 py-2 text-xs">{row.room}</td>
+                    {isAdmin && <td className="px-4 py-2 text-xs">{row.room}</td>}
                     <td className="px-4 py-2 text-[10px] text-gray-400">{row.timestamp || ''}</td>
                     <td className="px-4 py-2 text-center">
                       {isAdmin ? (
@@ -1147,7 +1147,7 @@ export const TabAssignment: React.FC<Props> = ({ onBackup, onRestore, onReset })
                 ))}
                 {filteredAssignmentData.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={isAdmin ? 9 : 8} className="px-4 py-8 text-center text-gray-500">
                       Chưa có dữ liệu phân công
                     </td>
                   </tr>
