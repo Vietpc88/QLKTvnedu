@@ -234,13 +234,19 @@ export const TabMerger: React.FC = () => {
 
     // Merge with assignment data
     const finalResults = finalMatches.map(res => {
-      const assignment = assignmentData.find(a => 
-        a.subject.trim() === res.subject.trim() && 
-        a.package.trim().toUpperCase() === res.tui.trim().toUpperCase()
-      );
+      const normalizePkg = (p: string) => String(p).toLowerCase().replace(/túi|tui/g, '').trim();
+      const resSub = String(res.subject || '').trim().toLowerCase();
+      const resTui = normalizePkg(res.tui || '');
+
+      const assignment = assignmentData.find(a => {
+        const aSub = String(a.subject || '').trim().toLowerCase();
+        const aPkg = normalizePkg(a.package || '');
+        return aSub === resSub && aPkg === resTui;
+      });
+
       return {
         ...res,
-        teacher: assignment ? assignment.teacher : 'Chưa phân công',
+        teacher: assignment ? (assignment.teacherName || assignment.teacher) : 'Chưa phân công',
         room: assignment ? assignment.room : 'Chưa xác định'
       };
     });
@@ -298,10 +304,16 @@ export const TabMerger: React.FC = () => {
       const content: any[] = [];
       
       const packagesWithGrades = Object.keys(byPackage).map(pkg => {
+        const pkgData = byPackage[pkg];
         let grade = '.....';
+        
+        const normalizePkg = (p: string) => String(p).toLowerCase().replace(/túi|tui/g, '').trim();
+        const subjNorm = String(subj || '').trim().toLowerCase();
+        const pkgNorm = normalizePkg(pkg || '');
+
         const assignment = assignmentData.find(a => 
-          a.subject.trim().toLowerCase() === subj.trim().toLowerCase() && 
-          a.package.trim().toUpperCase() === pkg.trim().toUpperCase()
+          String(a.subject || '').trim().toLowerCase() === subjNorm && 
+          normalizePkg(a.package || '') === pkgNorm
         );
         
         if (assignment && assignment.grade) {
